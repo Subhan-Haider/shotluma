@@ -107,13 +107,23 @@ ${assetRule}
 - 'Bricolage Grotesque Variable': expressive display grotesque, great for headlines. Weights 200-800.
 - 'Syne Variable': distinctive geometric display face. Variable weights; use 500-800.
 - 'Bebas Neue': condensed all-caps display face. Only weight 400 is loaded.
+- 'Archivo Black': ultra-bold condensed display face for punchy headlines. Only weight 400 is loaded.
+- 'Anton': heavy condensed all-caps display face. Only weight 400 is loaded.
 - 'Instrument Sans Variable': clean neutral sans, for body copy and UI-style labels. Weights 400-700.
 - 'Manrope Variable': polished modern sans. Variable weights; good for supporting copy.
+- 'Outfit Variable': geometric modern sans for headlines and UI labels. Variable weights.
+- 'Plus Jakarta Sans Variable': friendly contemporary sans for body and supporting copy. Variable weights.
+- 'Sora Variable': soft geometric sans for clean marketing layouts. Variable weights.
+- 'Inter Tight Variable': compact neutral sans for dense labels and captions. Variable weights.
 - 'Fraunces': editorial serif. Only weight 600 is loaded - always use fontWeight 600 with it.
 - 'Playfair Display': high-contrast editorial serif. Weights 600 and 700 are loaded.
 - 'DM Serif Display': confident editorial display serif. Only weight 400 is loaded.
+- 'Libre Baskerville': classic book serif for refined body or pull quotes. Weights 400 and 700 are loaded.
+- 'Cormorant Garamond': elegant high-contrast serif for luxury headlines. Weights 400, 600, and 700 are loaded.
 - 'Space Mono': technical monospace. Weights 400 and 700 are loaded.
+- 'JetBrains Mono': developer-style monospace for code accents and tech labels. Weights 400 and 700 are loaded.
 - 'Caveat': handwritten accent face. Weights 400 and 700 are loaded; use sparingly.
+- 'Permanent Marker': bold marker handwritten accent. Only weight 400 is loaded; use sparingly.
 - 'Arial, sans-serif': plain fallback. Avoid unless the user specifically asks for a plain/generic look.
 
 ## Language

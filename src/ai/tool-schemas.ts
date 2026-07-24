@@ -10,17 +10,27 @@ export const fontFamilySchema = z
     'Bricolage Grotesque Variable',
     'Syne Variable',
     'Bebas Neue',
+    'Archivo Black',
+    'Anton',
     'Instrument Sans Variable',
     'Manrope Variable',
+    'Outfit Variable',
+    'Plus Jakarta Sans Variable',
+    'Sora Variable',
+    'Inter Tight Variable',
     'Fraunces',
     'Playfair Display',
     'DM Serif Display',
+    'Libre Baskerville',
+    'Cormorant Garamond',
     'Space Mono',
+    'JetBrains Mono',
     'Caveat',
+    'Permanent Marker',
     'Arial, sans-serif',
   ])
   .describe(
-    'Font to use. Display: \'Bricolage Grotesque Variable\', \'Syne Variable\', \'Bebas Neue\' (400 only). Sans: \'Instrument Sans Variable\', \'Manrope Variable\'. Serif: \'Fraunces\' (600), \'Playfair Display\' (600/700), \'DM Serif Display\' (400). Mono: \'Space Mono\' (400/700). Handwritten: \'Caveat\' (400/700). \'Arial, sans-serif\' is a plain fallback.',
+    'Font to use. Display: \'Bricolage Grotesque Variable\', \'Syne Variable\', \'Bebas Neue\' (400 only), \'Archivo Black\' (400 only), \'Anton\' (400 only). Sans: \'Instrument Sans Variable\', \'Manrope Variable\', \'Outfit Variable\', \'Plus Jakarta Sans Variable\', \'Sora Variable\', \'Inter Tight Variable\'. Serif: \'Fraunces\' (600), \'Playfair Display\' (600/700), \'DM Serif Display\' (400), \'Libre Baskerville\' (400/700), \'Cormorant Garamond\' (400/600/700). Mono: \'Space Mono\' (400/700), \'JetBrains Mono\' (400/700). Handwritten: \'Caveat\' (400/700), \'Permanent Marker\' (400 only). \'Arial, sans-serif\' is a plain fallback.',
   )
 
 export const shapeSchema = z.enum([
