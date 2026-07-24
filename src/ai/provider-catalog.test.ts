@@ -35,6 +35,12 @@ describe('AI provider catalog', () => {
       (provider) => provider.id,
     )).toEqual(['moonshot'])
     expect(getAiProvider('xai').models[0]?.id).toBe('grok-4.5')
+    expect(getAiProvider('anthropic').models.map((model) => model.id)).toEqual([
+      'claude-sonnet-5',
+      'claude-opus-5',
+      'claude-opus-4-8',
+      'claude-haiku-4-5',
+    ])
   })
 
   it('provides a valid default model for every provider', () => {

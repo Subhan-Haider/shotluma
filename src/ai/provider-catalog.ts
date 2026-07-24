@@ -176,9 +176,15 @@ export const AI_PROVIDERS: readonly AiProviderOption[] = [
         reasoningEfforts: STANDARD_REASONING_EFFORTS,
       },
       {
+        id: 'claude-opus-5',
+        label: 'Claude Opus 5',
+        description: 'Highest quality for complex agentic work',
+        reasoningEfforts: STANDARD_REASONING_EFFORTS,
+      },
+      {
         id: 'claude-opus-4-8',
         label: 'Claude Opus 4.8',
-        description: 'Highest quality for complex work',
+        description: 'Previous Opus generation',
         reasoningEfforts: STANDARD_REASONING_EFFORTS,
       },
       {
