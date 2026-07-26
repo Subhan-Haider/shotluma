@@ -1,3 +1,5 @@
+import { OVERLAY_ASSET_BUDGET } from './overlay-asset-prompt'
+
 type AiPromptOptions = {
   targetSlideId?: string
   appName?: string
@@ -46,32 +48,47 @@ export function buildInstructions(options: AiPromptOptions = {}): string {
   const finish = targetSlideId
     ? 'Once you are done, reply in English with a short 1-2 sentence summary of what you changed. Plain prose, no markdown, no lists.'
     : 'Once you are done building slides, reply in English with a short 2-3 sentence summary of the design concept you created. Plain prose, no markdown, no lists.'
+  const overlayAssetMandate = targetSlideId
+    ? `The user switched overlay assets ON for this edit, so they want a generated graphic in play. Use one unless the requested change is purely about text, sizing, color, or position — in that case do the edit as asked and skip generation rather than decorating uninvited.`
+    : `The user switched overlay assets ON for this run. Treat that as an instruction, not permission: this set is expected to contain at least one generated cutout. Only skip generation entirely if every idea you can think of would fall into the "do NOT generate" list below — then say so in your closing summary.`
+
+  const overlayAssetTiming = targetSlideId
+    ? `Decide before you start editing, so the cutout is part of the change instead of an afterthought.`
+    : `Pick the subject during step 2, once the design concept is fixed and before you lay out the individual slides. That way one cutout can be planned into several screens instead of being bolted on late as decoration.`
+
   const overlayAssetsSection = enableOverlayAssets
     ? `
-## Overlay assets (gpt-image-2)
-You may generate custom overlay graphics when shapes/icons/text cannot express the needed element. These are cutout elements placed ON the screenshot composition with add_image — never full mockups, device frames, complete App Store screens, or slide-filling backgrounds.
+## Overlay assets (gpt-image-2) — ENABLED for this run
+${overlayAssetMandate}
 
-When to generate:
-- Custom stickers, badges, illustrations, props, mascots, or brand-flavored marks that Hugeicons cannot cover
-- Extracting a specific UI fragment or object from an uploaded screenshot to reuse as a floating accent
-- Product-specific imagery that makes the set feel tailored
+Overlay assets are custom cutout graphics you generate and place ON the composition with add_image.
 
-When NOT to generate:
-- Anything add_shape / add_icon / add_text already handles well
+Good subjects:
+- A sticker, badge, mascot, prop, or brand-flavored mark that carries the concept and no Hugeicon covers
+- A specific object or UI fragment lifted out of an uploaded screenshot and floated as an accent
+- One product-specific illustration that makes the whole set feel tailored to this app
+
+Do NOT generate:
+- Something add_shape / add_icon / add_text already does well — generate the element that those tools cannot draw
 - Device mockups or screenshot frames (use add_device)
-- Full marketing layouts or slide backgrounds (use set_slide_background / shapes)
-- Replacing a user's real app screenshot
+- Slide backgrounds, gradients, glows, blobs (use set_slide_background and shapes)
+- Invented screenshots of the user's app, logos, or anything pretending to be real product UI
 
-Required workflow (always both steps):
-1. create_overlay_asset — gpt-image-2 cannot emit transparency; the tool forces a flat #FF00FF chroma-key backdrop. Prompt ONLY the subject (materials, style, colors of the object). Do not mention backgrounds or transparency. Attach referenceAssetIds when extracting/matching from a screenshot.
-2. remove_asset_background on the returned assetId — in-browser chroma-key to a transparent PNG (new asset id).
-3. Place the transparent asset with add_image. Verify with render_slide_preview.
+How often:
+- Aim for 1-2 generated subjects. Hard budget of ${OVERLAY_ASSET_BUDGET} create_overlay_asset calls per run; the tool reports generationsLeft and refuses further calls once it is spent.
+- One call per subject. Reuse the same cutout across slides via add_image and vary size, rotation, and opacity instead of generating near-duplicates — repetition of a motif reads as art direction, not laziness.
+- If a result is unusable, retry that subject at most once, then fall back to shapes/icons.
+- Each call takes roughly 15-40 seconds, so commit to a subject instead of generating speculatively "to see what comes out".
 
-Prompting tips for create_overlay_asset:
-- One subject per call; keep it concrete ("matte coral notification badge with a white bell glyph, soft studio light, slight 3D").
-- Prefer medium quality and square size unless the subject needs another aspect.
-- Reuse a generated cutout across slides when it fits; do not spam assets.
-- After remove_asset_background, study the returned image: if magenta fringing remains or the subject was damaged, regenerate with a clearer subject prompt or stronger edge contrast rather than placing a bad cutout.
+When in the run:
+${overlayAssetTiming}
+
+Required two-step workflow — never skip step 2:
+1. create_overlay_asset — gpt-image-2 cannot emit transparency, so the tool forces a flat #FF00FF chroma-key backdrop. Prompt ONLY the subject: one object, its material, style, colors, lighting. Never mention backgrounds, transparency, or layout. Keep magenta and hot pink out of the subject, they would be keyed away. Attach referenceAssetIds when extracting from or matching an uploaded screenshot.
+2. remove_asset_background on the returned assetId — in-browser chroma-key that returns a NEW transparent asset id. It is free and instant. Placing the step-1 asset directly would drop a magenta block on the slide.
+3. Place the step-2 asset with add_image, then confirm with render_slide_preview.
+
+Judging the result: study the transparent image you get back. Magenta fringing along the edges, a half-erased subject, or a subject that ignored the brief means do not place it. Fix it or drop the idea — a clean icon always beats a broken cutout.
 `
     : ''
 

@@ -284,13 +284,13 @@ const IdleContent = ({
         <span className="ai-modal-toggle__copy">
           <b>{enableOverlayAssets ? 'On' : 'Off'}</b>
           <span>
-            Let the AI generate cutout graphics with OpenAI gpt-image-2 (badges, stickers, extracted UI), then remove the chroma-key background in-browser.
+            The AI generates cutout graphics with OpenAI gpt-image-2 (badges, stickers, extracted UI) and removes the chroma-key background in-browser.
           </span>
         </span>
       </button>
       <small className="ai-modal-hint">
         {overlayAssetsAvailable
-          ? 'Uses your OpenAI key for image generation. Not for mockups — only overlay elements for more flexible screenshot layouts.'
+          ? 'On: expect 1–2 generated graphics, billed to your OpenAI key. Overlay elements only — never mockups or device frames.'
           : 'Requires VITE_OPENAI_API_KEY in .env.local (separate from the chat model above).'}
       </small>
     </div>

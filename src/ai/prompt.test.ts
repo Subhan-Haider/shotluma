@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { OVERLAY_ASSET_BUDGET } from './overlay-asset-prompt'
 import { buildInstructions, buildUserMessage } from './prompt'
 
 describe('AI prompt language', () => {
@@ -74,10 +75,39 @@ describe('AI prompt overlay assets', () => {
   it('teaches the chroma-key workflow when overlay assets are enabled', () => {
     const instructions = buildInstructions({ enableOverlayAssets: true })
 
-    expect(instructions).toContain('Overlay assets (gpt-image-2)')
+    expect(instructions).toContain('Overlay assets (gpt-image-2) — ENABLED for this run')
     expect(instructions).toContain('create_overlay_asset')
     expect(instructions).toContain('remove_asset_background')
     expect(instructions).toContain('#FF00FF')
-    expect(instructions).toContain('never full mockups')
+    expect(instructions).toContain('Do NOT generate:')
+  })
+
+  it('treats the opt-in as an instruction to actually generate', () => {
+    const instructions = buildInstructions({ enableOverlayAssets: true })
+
+    expect(instructions).toContain('Treat that as an instruction, not permission')
+    expect(instructions).toContain('expected to contain at least one generated cutout')
+  })
+
+  it('states the per-run generation budget and the 1-2 target', () => {
+    const instructions = buildInstructions({ enableOverlayAssets: true })
+
+    expect(instructions).toContain(`Hard budget of ${OVERLAY_ASSET_BUDGET} create_overlay_asset calls per run`)
+    expect(instructions).toContain('Aim for 1-2 generated subjects')
+    expect(instructions).toContain('One call per subject')
+  })
+
+  it('times generation to the concept phase when building a new set', () => {
+    const instructions = buildInstructions({ enableOverlayAssets: true })
+
+    expect(instructions).toContain('Pick the subject during step 2')
+  })
+
+  it('lets a pure text or layout edit skip generation in edit mode', () => {
+    const instructions = buildInstructions({ targetSlideId: 'slide-1', enableOverlayAssets: true })
+
+    expect(instructions).toContain('purely about text, sizing, color, or position')
+    expect(instructions).toContain('Decide before you start editing')
+    expect(instructions).not.toContain('Pick the subject during step 2')
   })
 })

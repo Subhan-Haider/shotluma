@@ -2,6 +2,7 @@ import { generateImage, tool } from 'ai'
 import { z } from 'zod'
 import { ASSET_CHROMA_KEY_HEX } from './chroma-key'
 import {
+  OVERLAY_ASSET_BUDGET,
   OVERLAY_ASSET_SIZE_MAP,
   buildOverlayAssetPrompt,
   type OverlayAssetSize,
@@ -13,6 +14,12 @@ import {
   notFound,
   type ToolContext,
 } from './tool-context'
+
+/**
+ * A padded cutout clears well over half the frame. Far less means the backdrop was not a
+ * flat key, so the "transparent" asset is really the original image with a few holes.
+ */
+const MIN_CLEARED_PERCENT = 25
 
 const dataUrlToBase64 = (dataUrl: string): string => {
   const comma = dataUrl.indexOf(',')
@@ -32,10 +39,35 @@ type OverlayAssetToolResult =
     name: string
     chromaKey: typeof ASSET_CHROMA_KEY_HEX
     nextStep: string
+    /** Remaining gpt-image-2 calls in this run. Only set by create_overlay_asset. */
+    generationsLeft?: number
+    /** Share of pixels made fully transparent, e.g. "62%". Only set by remove_asset_background. */
+    backgroundCleared?: string
+    warning?: string
     image: string
     mediaType: 'image/png'
   }
   | { ok: false; error: string }
+
+/**
+ * Send the summary as text plus the image itself, so the model can judge the cutout
+ * without the raw base64 payload leaking into the text channel.
+ */
+const toAssetModelOutput = (output: OverlayAssetToolResult) => {
+  if (!output.ok) return { type: 'text' as const, value: JSON.stringify(output) }
+  const { image, mediaType, ...summary } = output
+  return {
+    type: 'content' as const,
+    value: [
+      { type: 'text' as const, text: JSON.stringify(summary) },
+      {
+        type: 'file' as const,
+        mediaType,
+        data: { type: 'data' as const, data: image },
+      },
+    ],
+  }
+}
 
 const resolveReferenceImages = (
   controller: ToolContext['controller'],
@@ -102,29 +134,36 @@ export const createOverlayAssetTools = (
   { controller, emit }: ToolContext,
   options?: { abortSignal?: AbortSignal },
 ) => {
+  let generationsUsed = 0
+
   const createOverlayAsset = tool({
-    description: `Generate a cutout-ready overlay graphic with OpenAI gpt-image-2 and register it as an upload asset.
+    description: `Generate ONE cutout-ready overlay graphic with OpenAI gpt-image-2 and register it as an upload asset. The user explicitly turned this capability on for this run and expects to see a generated element in the result.
 
-Use this for decorative or product-specific elements that will sit ON TOP of App Store screenshot compositions via add_image — badges, stickers, illustrations, props, extracted UI fragments, custom marks. Do NOT use it for full mockups, device frames, complete screens, or solid slide backgrounds (prefer shapes/icons/text/set_slide_background for those).
+USE FOR: decorative or product-specific elements that sit ON TOP of a screenshot composition via add_image — badges, stickers, illustrations, mascots, props, extracted UI fragments, custom marks.
+DO NOT USE FOR: full mockups, device frames (use add_device), complete app screens, slide backgrounds (use set_slide_background), or anything add_shape / add_icon / add_text already covers well. Never use it to invent a screenshot of the user's app.
 
-gpt-image-2 cannot emit transparency. This tool forces a flat ${ASSET_CHROMA_KEY_HEX} chroma-key backdrop. After generation you MUST call remove_asset_background on the returned assetId before placing the image.
+HOW OFTEN: aim for 1-2 subjects per run. Each call is slow and paid (roughly 15-40s), with a hard limit of ${OVERLAY_ASSET_BUDGET} generations per run. Generate a subject ONCE and reuse the resulting cutout across slides with add_image (vary size, rotation, opacity) instead of generating variants of the same thing. Retry an unusable subject at most once.
 
-Prompt only the SUBJECT (style, materials, colors of the object). Do not mention backgrounds or transparency — the tool appends the chroma-key constraints. When extracting or matching something from a user screenshot, pass that screenshot's asset id in referenceAssetIds.`,
+WHEN: decide on the subject early — after the design concept is clear, before you lay out the individual slides — so the same cutout can be planned into several slides.
+
+TRANSPARENCY: gpt-image-2 cannot emit transparency, so this tool forces a flat ${ASSET_CHROMA_KEY_HEX} chroma-key backdrop. You MUST call remove_asset_background on the returned assetId before add_image.
+
+PROMPTING: describe ONLY the subject — one object, its material, style, colors, lighting. Never mention backgrounds, transparency, canvases, or layout; the tool appends the chroma-key constraints. Keep magenta/pink out of the subject itself, it would be keyed away. When extracting or matching something from a user screenshot, pass that screenshot's asset id in referenceAssetIds.`,
     inputSchema: z.object({
       prompt: z.string().min(1).describe(
-        'Subject-only description of the overlay element to generate. English. No background instructions.',
+        'Subject-only description of one overlay element, in English. Name the object, material, style, colors and lighting. No background, transparency, layout or slide instructions.',
       ),
       name: z.string().optional().describe(
         'Short filename-style label for the new asset (e.g. "spark-badge"). Defaults to overlay-asset.',
       ),
       referenceAssetIds: z.array(z.string()).max(4).optional().describe(
-        'Optional uploaded screenshot/logo asset ids to attach as visual references (e.g. extract a UI chip from a screenshot). Max 4.',
+        'Optional uploaded screenshot/logo asset ids to attach as visual references (e.g. extract a UI chip from a screenshot, or match brand colors). Max 4.',
       ),
       size: z.enum(['square', 'portrait', 'landscape']).optional().describe(
-        'Output aspect. Defaults to square. Use portrait/landscape only when the subject needs it.',
+        'Output aspect. Defaults to square, which suits almost every overlay. Use portrait/landscape only for clearly elongated subjects.',
       ),
       quality: z.enum(['low', 'medium', 'high']).optional().describe(
-        'gpt-image-2 quality. Defaults to medium.',
+        'gpt-image-2 quality. Defaults to medium. Use high only for a hero element the user will look at closely; high is noticeably slower.',
       ),
     }),
     execute: async ({
@@ -142,10 +181,18 @@ Prompt only the SUBJECT (style, materials, colors of the object). Do not mention
         }
       }
 
+      if (generationsUsed >= OVERLAY_ASSET_BUDGET) {
+        return {
+          ok: false,
+          error: `Overlay asset budget spent (${OVERLAY_ASSET_BUDGET} gpt-image-2 calls per run). Reuse an already generated cutout with add_image, or build the element from add_shape / add_icon / add_text.`,
+        }
+      }
+
       const references = resolveReferenceImages(controller, referenceAssetIds)
       if (!references.ok) return references
 
       emit({ tool: 'create_overlay_asset' })
+      generationsUsed += 1
 
       const generated = await generateChromaKeyedOverlay({
         apiKey,
@@ -165,42 +212,25 @@ Prompt only the SUBJECT (style, materials, colors of the object). Do not mention
         assetId,
         name: assetName,
         chromaKey: ASSET_CHROMA_KEY_HEX,
-        nextStep: `Call remove_asset_background with assetId "${assetId}" before placing with add_image.`,
+        nextStep: `This image still has its ${ASSET_CHROMA_KEY_HEX} backdrop. Call remove_asset_background with assetId "${assetId}" now, and place that result — not this asset — with add_image.`,
+        generationsLeft: OVERLAY_ASSET_BUDGET - generationsUsed,
         image: dataUrlToBase64(generated.dataUrl),
         mediaType: 'image/png',
       }
     },
-    toModelOutput: ({ output }) => {
-      if (!output.ok) return { type: 'text', value: JSON.stringify(output) }
-      return {
-        type: 'content',
-        value: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              ok: true,
-              assetId: output.assetId,
-              name: output.name,
-              chromaKey: output.chromaKey,
-              nextStep: output.nextStep,
-            }),
-          },
-          {
-            type: 'file',
-            mediaType: output.mediaType,
-            data: { type: 'data', data: output.image },
-          },
-        ],
-      }
-    },
+    toModelOutput: ({ output }) => toAssetModelOutput(output),
   })
 
   const removeAssetBackground = tool({
-    description: `Remove the solid ${ASSET_CHROMA_KEY_HEX} chroma-key backdrop from an asset created by create_overlay_asset, producing a transparent PNG registered as a NEW asset.
+    description: `Strip the flat ${ASSET_CHROMA_KEY_HEX} chroma-key backdrop from a create_overlay_asset image and register the result as a NEW transparent PNG asset.
 
-Always run this after create_overlay_asset before placing the graphic with add_image. Uses an in-browser soft chroma-key (no network call). Returns the transparent image so you can verify edge quality.`,
+WHEN: immediately after every create_overlay_asset call, before add_image. Placing the raw generated asset would put a magenta block on the slide. This runs in-browser (Canvas, no network call, no cost) and does not count against the generation budget.
+
+ONLY on assets produced by create_overlay_asset. On a normal screenshot or logo it would erase any magenta pixels and leave the rest opaque.
+
+CHECK THE RESULT: the transparent image comes back together with backgroundCleared, the share of pixels that actually became transparent. A clean padded cutout clears well over half the frame; a low number or a warning field means the backdrop was not a flat key and the asset is unusable. Look at the image too — if part of the subject was erased, do not place it. Either regenerate the subject with stronger contrast against magenta (that spends one generation) or fall back to shapes/icons.`,
     inputSchema: z.object({
-      assetId: z.string().describe('Asset id of the chroma-keyed image from create_overlay_asset.'),
+      assetId: z.string().describe('Asset id returned by create_overlay_asset (the chroma-keyed image, not a user upload).'),
       name: z.string().optional().describe(
         'Optional label for the transparent asset. Defaults to the source name with "-cutout".',
       ),
@@ -215,16 +245,23 @@ Always run this after create_overlay_asset before placing the graphic with add_i
       emit({ tool: 'remove_asset_background' })
 
       try {
-        const transparentDataUrl = await removeChromaKeyBackground(src)
+        const { dataUrl: transparentDataUrl, stats } = await removeChromaKeyBackground(src)
         const assetName = cutoutAssetName(controller, assetId, name)
         const nextAssetId = controller.addAsset({ name: assetName, src: transparentDataUrl })
+        const clearedPercent = Math.round(stats.clearedRatio * 100)
 
         return {
           ok: true,
           assetId: nextAssetId,
           name: assetName,
           chromaKey: ASSET_CHROMA_KEY_HEX,
-          nextStep: `Place with add_image using assetId "${nextAssetId}".`,
+          nextStep: `Transparent cutout ready. Place it with add_image using assetId "${nextAssetId}", then verify with render_slide_preview. Reuse this id on other slides instead of generating again.`,
+          backgroundCleared: `${clearedPercent}%`,
+          ...(clearedPercent < MIN_CLEARED_PERCENT
+            ? {
+                warning: `Only ${clearedPercent}% of the image became transparent, so the generated backdrop was probably not a flat key. Do not place this asset — regenerate the subject and insist on a uniform ${ASSET_CHROMA_KEY_HEX} background, or build the element from shapes and icons instead.`,
+              }
+            : {}),
           image: dataUrlToBase64(transparentDataUrl),
           mediaType: 'image/png',
         }
@@ -233,29 +270,7 @@ Always run this after create_overlay_asset before placing the graphic with add_i
         return { ok: false, error: `Background removal failed: ${message}` }
       }
     },
-    toModelOutput: ({ output }) => {
-      if (!output.ok) return { type: 'text', value: JSON.stringify(output) }
-      return {
-        type: 'content',
-        value: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              ok: true,
-              assetId: output.assetId,
-              name: output.name,
-              chromaKey: output.chromaKey,
-              nextStep: output.nextStep,
-            }),
-          },
-          {
-            type: 'file',
-            mediaType: output.mediaType,
-            data: { type: 'data', data: output.image },
-          },
-        ],
-      }
-    },
+    toModelOutput: ({ output }) => toAssetModelOutput(output),
   })
 
   return {

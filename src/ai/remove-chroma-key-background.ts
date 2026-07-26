@@ -1,4 +1,9 @@
-import { applyChromaKeyToImageData, type ChromaKeyOptions } from './chroma-key'
+import {
+  applyChromaKeyToImageData,
+  detectChromaKey,
+  type ChromaKeyOptions,
+  type ChromaKeyStats,
+} from './chroma-key'
 
 const loadImageFromDataUrl = (dataUrl: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
@@ -21,12 +26,14 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
 
 /**
  * Remove a solid chroma-key backdrop from a data-URL image and return a PNG data URL.
- * Uses the Canvas 2D API (same-origin / data-URL sources only).
+ * The key color is measured from the image unless the caller pins one, because generators
+ * only approximate the requested backdrop color. Uses the Canvas 2D API (same-origin /
+ * data-URL sources only).
  */
 export async function removeChromaKeyBackground(
   dataUrl: string,
   options: ChromaKeyOptions = {},
-): Promise<string> {
+): Promise<{ dataUrl: string; stats: ChromaKeyStats }> {
   const image = await loadImageFromDataUrl(dataUrl)
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d', { willReadFrequently: true })
@@ -42,7 +49,10 @@ export async function removeChromaKeyBackground(
   canvas.height = height
   context.drawImage(image, 0, 0)
   const frame = context.getImageData(0, 0, width, height)
-  applyChromaKeyToImageData(frame, options)
+  const stats = applyChromaKeyToImageData(frame, {
+    ...options,
+    key: options.key ?? detectChromaKey(frame),
+  })
   context.putImageData(frame, 0, 0)
 
   const blob = await new Promise<Blob>((resolve, reject) => {
@@ -55,5 +65,5 @@ export async function removeChromaKeyBackground(
     )
   })
 
-  return blobToDataUrl(blob)
+  return { dataUrl: await blobToDataUrl(blob), stats }
 }

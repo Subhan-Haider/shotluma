@@ -112,7 +112,7 @@ The AI feature is split into explicit layers:
 | `src/ai/*-tools.ts`, `src/ai/*-tool.ts` | Focused slide, media, text, update, inspection, and overlay-asset tools |
 | `src/ai/chroma-key.ts` | Pure soft chroma-key pixel math for overlay cutouts |
 | `src/ai/remove-chroma-key-background.ts` | Canvas wrapper that exports transparent PNGs |
-| `src/ai/overlay-asset-prompt.ts` | Hard chroma-key constraints appended to overlay prompts |
+| `src/ai/overlay-asset-prompt.ts` | Hard chroma-key constraints appended to overlay prompts, plus the per-run generation budget |
 | `src/ai/tool-context.ts` | Shared clamps, lookups, activity, and measurements |
 | `src/ai/tool-schemas.ts` | Shared model-visible schemas and descriptions |
 | `src/ai/controller.ts` | Allowed editor reads and mutations |
