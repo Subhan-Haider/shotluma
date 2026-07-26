@@ -2,10 +2,11 @@ type AiPromptOptions = {
   targetSlideId?: string
   appName?: string
   logoAssetId?: string
+  enableOverlayAssets?: boolean
 }
 
 export function buildInstructions(options: AiPromptOptions = {}): string {
-  const { targetSlideId } = options
+  const { targetSlideId, enableOverlayAssets } = options
   const mission = targetSlideId
     ? `Your job is to edit the existing App Store screen with id "${targetSlideId}" according to the user's request.`
     : 'Your job is to design a bold, cohesive set of App Store screenshots for the app the user describes.'
@@ -45,6 +46,34 @@ export function buildInstructions(options: AiPromptOptions = {}): string {
   const finish = targetSlideId
     ? 'Once you are done, reply in English with a short 1-2 sentence summary of what you changed. Plain prose, no markdown, no lists.'
     : 'Once you are done building slides, reply in English with a short 2-3 sentence summary of the design concept you created. Plain prose, no markdown, no lists.'
+  const overlayAssetsSection = enableOverlayAssets
+    ? `
+## Overlay assets (gpt-image-2)
+You may generate custom overlay graphics when shapes/icons/text cannot express the needed element. These are cutout elements placed ON the screenshot composition with add_image — never full mockups, device frames, complete App Store screens, or slide-filling backgrounds.
+
+When to generate:
+- Custom stickers, badges, illustrations, props, mascots, or brand-flavored marks that Hugeicons cannot cover
+- Extracting a specific UI fragment or object from an uploaded screenshot to reuse as a floating accent
+- Product-specific imagery that makes the set feel tailored
+
+When NOT to generate:
+- Anything add_shape / add_icon / add_text already handles well
+- Device mockups or screenshot frames (use add_device)
+- Full marketing layouts or slide backgrounds (use set_slide_background / shapes)
+- Replacing a user's real app screenshot
+
+Required workflow (always both steps):
+1. create_overlay_asset — gpt-image-2 cannot emit transparency; the tool forces a flat #FF00FF chroma-key backdrop. Prompt ONLY the subject (materials, style, colors of the object). Do not mention backgrounds or transparency. Attach referenceAssetIds when extracting/matching from a screenshot.
+2. remove_asset_background on the returned assetId — in-browser chroma-key to a transparent PNG (new asset id).
+3. Place the transparent asset with add_image. Verify with render_slide_preview.
+
+Prompting tips for create_overlay_asset:
+- One subject per call; keep it concrete ("matte coral notification badge with a white bell glyph, soft studio light, slight 3D").
+- Prefer medium quality and square size unless the subject needs another aspect.
+- Reuse a generated cutout across slides when it fits; do not spam assets.
+- After remove_asset_background, study the returned image: if magenta fringing remains or the subject was damaged, regenerate with a clearer subject prompt or stronger edge contrast rather than placing a bad cutout.
+`
+    : ''
 
   return `You are a senior App Store marketing designer operating Frameflow, a screenshot editor, through a set of tools. ${mission}
 
@@ -130,8 +159,8 @@ ${assetRule}
 Write all on-canvas copy (headlines, supporting text, labels) in English, regardless of the language used in the user's request.
 
 ## Assets
-Only ever reference asset ids that actually exist (from get_canvas_state or the ids given to you in the user message). Never invent an asset id.
-
+Only ever reference asset ids that actually exist (from get_canvas_state, ids returned by tools, or the ids given to you in the user message). Never invent an asset id.
+${overlayAssetsSection}
 ## Finish
 ${finish}`
 }

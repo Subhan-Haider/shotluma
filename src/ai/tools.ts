@@ -1,6 +1,7 @@
 import { createAddIconTool } from './icon-tool'
 import { createInspectionTools } from './inspection-tools'
 import { createMediaTools } from './media-tools'
+import { createOverlayAssetTools } from './overlay-asset-tools'
 import { createSlideTools } from './slide-tools'
 import { createAddTextTool } from './text-tool'
 import {
@@ -15,6 +16,9 @@ export type { AiToolActivity } from './tool-context'
 type EditorToolOptions = {
   mode?: 'generate' | 'edit'
   onActivity?: (activity: AiToolActivity) => void
+  /** When true, expose gpt-image-2 overlay asset tools (requires OpenAI key). */
+  enableOverlayAssets?: boolean
+  abortSignal?: AbortSignal
 }
 
 export function createEditorTools(
@@ -27,6 +31,11 @@ export function createEditorTools(
     delete_slide: deleteSlide,
     ...editableSlideTools
   } = createSlideTools(context)
+  const overlayTools = options?.enableOverlayAssets
+    ? createOverlayAssetTools(context, {
+        ...(options.abortSignal ? { abortSignal: options.abortSignal } : {}),
+      })
+    : {}
   const editTools = {
     ...editableSlideTools,
     add_text: createAddTextTool(context),
@@ -34,6 +43,7 @@ export function createEditorTools(
     ...createMediaTools(context),
     update_element: createUpdateElementTool(context),
     ...createInspectionTools(context),
+    ...overlayTools,
   }
 
   if (options?.mode === 'edit') return editTools

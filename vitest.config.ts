@@ -9,6 +9,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: [
+        'src/ai/chroma-key.ts',
+        'src/ai/overlay-asset-prompt.ts',
         'src/ai/provider-config.ts',
         'src/ai/provider-catalog.ts',
         'src/ai/richtext.ts',

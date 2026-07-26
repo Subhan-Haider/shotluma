@@ -131,6 +131,8 @@ type IdleContentProps = {
   description: string
   logo: ImageDraft | null
   screenshots: ImageDraft[]
+  enableOverlayAssets: boolean
+  overlayAssetsAvailable: boolean
   logoInputRef: RefObject<HTMLInputElement | null>
   fileInputRef: RefObject<HTMLInputElement | null>
   onAppNameChange: (appName: string) => void
@@ -139,6 +141,7 @@ type IdleContentProps = {
   onRemoveLogo: () => void
   onScreenshotFiles: (files: File[]) => void
   onRemoveScreenshot: (id: string) => void
+  onEnableOverlayAssetsChange: (enabled: boolean) => void
 }
 
 const IdleContent = ({
@@ -147,6 +150,8 @@ const IdleContent = ({
   description,
   logo,
   screenshots,
+  enableOverlayAssets,
+  overlayAssetsAvailable,
   logoInputRef,
   fileInputRef,
   onAppNameChange,
@@ -155,6 +160,7 @@ const IdleContent = ({
   onRemoveLogo,
   onScreenshotFiles,
   onRemoveScreenshot,
+  onEnableOverlayAssetsChange,
 }: IdleContentProps) => (
   <>
     {!isEditMode && (
@@ -260,6 +266,33 @@ const IdleContent = ({
           ))}
         </div>
       )}
+    </div>
+    <div className="ai-modal-field">
+      <label htmlFor="ai-modal-overlay-assets">AI overlay assets</label>
+      <button
+        id="ai-modal-overlay-assets"
+        type="button"
+        role="switch"
+        aria-checked={enableOverlayAssets}
+        className={`ai-modal-toggle${enableOverlayAssets ? ' is-active' : ''}`}
+        disabled={!overlayAssetsAvailable}
+        onClick={() => onEnableOverlayAssetsChange(!enableOverlayAssets)}
+      >
+        <span className="ai-modal-toggle__track" aria-hidden="true">
+          <span className="ai-modal-toggle__thumb" />
+        </span>
+        <span className="ai-modal-toggle__copy">
+          <b>{enableOverlayAssets ? 'On' : 'Off'}</b>
+          <span>
+            Let the AI generate cutout graphics with OpenAI gpt-image-2 (badges, stickers, extracted UI), then remove the chroma-key background in-browser.
+          </span>
+        </span>
+      </button>
+      <small className="ai-modal-hint">
+        {overlayAssetsAvailable
+          ? 'Uses your OpenAI key for image generation. Not for mockups — only overlay elements for more flexible screenshot layouts.'
+          : 'Requires VITE_OPENAI_API_KEY in .env.local (separate from the chat model above).'}
+      </small>
     </div>
   </>
 )
@@ -374,6 +407,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [doneInfo, setDoneInfo] = useState<{ summary: string; slidesCreated: number } | null>(null)
   const [selection, setSelection] = useState<AiModelSelection>(INITIAL_AI_SELECTION)
+  const [enableOverlayAssets, setEnableOverlayAssets] = useState(false)
 
   const logoInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -487,6 +521,9 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
       ...(preparedLogo ? { logo: preparedLogo } : {}),
       controller,
       ...(targetSlide ? { targetSlideId: targetSlide.id } : {}),
+      ...(enableOverlayAssets && AI_PROVIDER_AVAILABILITY.openai
+        ? { enableOverlayAssets: true }
+        : {}),
       signal: abortController.signal,
       onEvent: handleEvent,
       ...(onActivity ? { onActivity } : {}),
@@ -539,6 +576,8 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
                 description={description}
                 logo={logo}
                 screenshots={screenshots}
+                enableOverlayAssets={enableOverlayAssets && AI_PROVIDER_AVAILABILITY.openai}
+                overlayAssetsAvailable={AI_PROVIDER_AVAILABILITY.openai}
                 logoInputRef={logoInputRef}
                 fileInputRef={fileInputRef}
                 onAppNameChange={setAppName}
@@ -551,6 +590,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
                   void handleScreenshotFiles(files)
                 }}
                 onRemoveScreenshot={removeScreenshot}
+                onEnableOverlayAssetsChange={setEnableOverlayAssets}
               />
             </>
           )}

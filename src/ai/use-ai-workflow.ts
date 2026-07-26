@@ -84,8 +84,13 @@ export function useAiWorkflow({
         setSlides(next)
       },
       getUploads: () => uploadsRef.current,
+      setUploads: (updater) => {
+        const next = updater(uploadsRef.current)
+        uploadsRef.current = next
+        setUploads(next)
+      },
     }))
-  }, [setSlides, slidesRef, uploadsRef])
+  }, [setSlides, setUploads, slidesRef, uploadsRef])
 
   const targetSlide = targetSlideId
     ? slides.find((slide) => slide.id === targetSlideId)

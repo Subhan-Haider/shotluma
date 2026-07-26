@@ -23,6 +23,8 @@ export type AiEditorController = {
   updateElement(slideId: string, elementId: string, patch: Record<string, unknown>): boolean
   deleteElement(slideId: string, elementId: string): boolean
   getAssetSrc(assetId: string): string | undefined
+  /** Register a new upload asset (data URL) and return its id. */
+  addAsset(input: { name: string; src: string }): string
 }
 
 const DEFAULT_NEW_SLIDE_BACKGROUND: Background = { type: 'solid', color1: '#111116', color2: '#111116', angle: 90 }
@@ -84,6 +86,7 @@ export function createAiController(io: {
   getSlides(): Slide[]
   setSlides(updater: (slides: Slide[]) => Slide[]): void
   getUploads(): UploadAsset[]
+  setUploads(updater: (uploads: UploadAsset[]) => UploadAsset[]): void
 }): AiEditorController {
   const findSlide = (slideId: string) => io.getSlides().find((slide) => slide.id === slideId)
 
@@ -191,6 +194,13 @@ export function createAiController(io: {
 
   const getAssetSrc: AiEditorController['getAssetSrc'] = (assetId) => io.getUploads().find((asset) => asset.id === assetId)?.src
 
+  const addAsset: AiEditorController['addAsset'] = ({ name, src }) => {
+    const id = uid('upload')
+    const asset: UploadAsset = { id, name, src }
+    io.setUploads((current) => [asset, ...current])
+    return id
+  }
+
   return {
     snapshot,
     addSlide,
@@ -201,6 +211,7 @@ export function createAiController(io: {
     updateElement,
     deleteElement,
     getAssetSrc,
+    addAsset,
   }
 }
 
@@ -225,5 +236,6 @@ export function scopeAiControllerToSlide(controller: AiEditorController, targetS
     updateElement: (slideId, elementId, patch) => isTarget(slideId) && controller.updateElement(slideId, elementId, patch),
     deleteElement: (slideId, elementId) => isTarget(slideId) && controller.deleteElement(slideId, elementId),
     getAssetSrc: (assetId) => controller.getAssetSrc(assetId),
+    addAsset: (input) => controller.addAsset(input),
   }
 }

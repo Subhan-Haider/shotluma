@@ -82,6 +82,14 @@ const describeToolCall = (toolName: string, input: unknown): string => {
       return 'Layout measured'
     case 'render_slide_preview':
       return 'Preview checked'
+    case 'create_overlay_asset':
+      return typeof data['name'] === 'string'
+        ? `Overlay asset: “${truncate(data['name'], 30)}”`
+        : typeof data['prompt'] === 'string'
+          ? `Overlay asset: “${truncate(data['prompt'], 30)}”`
+          : 'Overlay asset generated'
+    case 'remove_asset_background':
+      return 'Overlay background removed'
     default:
       return `Tool: ${toolName}`
   }
@@ -243,6 +251,50 @@ const collectStreamPart = <TOOLS extends ToolSet>(options: {
   }
 }
 
+const openAiGenerationStream = (options: {
+  model: Awaited<ReturnType<typeof createAiModel>>
+  selection: AiModelSelection
+  controller: AiEditorController
+  content: UserContent[]
+  targetSlideId?: string
+  enableOverlayAssets?: boolean
+  signal?: AbortSignal
+  onActivity?: (activity: AiToolActivity) => void
+}) => {
+  const {
+    model,
+    selection,
+    controller,
+    content,
+    targetSlideId,
+    enableOverlayAssets,
+    signal,
+    onActivity,
+  } = options
+  const runController = targetSlideId
+    ? scopeAiControllerToSlide(controller, targetSlideId)
+    : controller
+  const reasoningOptions = getAiStreamReasoningOptions(selection)
+
+  return streamText({
+    model,
+    instructions: buildInstructions({
+      ...(targetSlideId ? { targetSlideId } : {}),
+      ...(enableOverlayAssets ? { enableOverlayAssets: true } : {}),
+    }),
+    messages: [{ role: 'user', content }],
+    tools: createEditorTools(runController, {
+      mode: targetSlideId ? 'edit' : 'generate',
+      ...(onActivity ? { onActivity } : {}),
+      ...(enableOverlayAssets ? { enableOverlayAssets: true } : {}),
+      ...(signal ? { abortSignal: signal } : {}),
+    }),
+    stopWhen: isStepCount(64),
+    ...(reasoningOptions ?? {}),
+    ...(signal ? { abortSignal: signal } : {}),
+  })
+}
+
 export async function runAiGeneration(options: {
   selection: AiModelSelection
   description: string
@@ -251,6 +303,7 @@ export async function runAiGeneration(options: {
   logo?: PreparedAsset
   controller: AiEditorController
   targetSlideId?: string
+  enableOverlayAssets?: boolean
   signal?: AbortSignal
   onEvent: (event: AiRunEvent) => void
   onActivity?: (activity: AiToolActivity) => void
@@ -263,6 +316,7 @@ export async function runAiGeneration(options: {
     logo,
     controller,
     targetSlideId,
+    enableOverlayAssets,
     signal,
     onEvent,
     onActivity,
@@ -306,7 +360,6 @@ export async function runAiGeneration(options: {
     const modelOption = getAiModel(selection)
     const reasoning = getAiSdkReasoningEffort(selection)
     const model = await createAiModel(selection)
-
     const content = buildUserContent({
       description,
       screenshots,
@@ -324,19 +377,15 @@ export async function runAiGeneration(options: {
       ].join(' · ')}…`,
     })
 
-    const runController = targetSlideId ? scopeAiControllerToSlide(controller, targetSlideId) : controller
-    const reasoningOptions = getAiStreamReasoningOptions(selection)
-    const result = streamText({
+    const result = openAiGenerationStream({
       model,
-      instructions: buildInstructions(targetSlideId ? { targetSlideId } : {}),
-      messages: [{ role: 'user', content }],
-      tools: createEditorTools(runController, {
-        mode: targetSlideId ? 'edit' : 'generate',
-        ...(onActivity ? { onActivity } : {}),
-      }),
-      stopWhen: isStepCount(64),
-      ...(reasoningOptions ?? {}),
-      ...(signal ? { abortSignal: signal } : {}),
+      selection,
+      controller,
+      content,
+      ...(targetSlideId ? { targetSlideId } : {}),
+      ...(enableOverlayAssets ? { enableOverlayAssets: true } : {}),
+      ...(signal ? { signal } : {}),
+      ...(onActivity ? { onActivity } : {}),
     })
 
     for await (const part of result.stream) {

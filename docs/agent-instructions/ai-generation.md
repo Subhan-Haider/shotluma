@@ -29,6 +29,7 @@ The model mutates the editor only through the tools composed by `src/ai/tools.ts
 - Icons: the model places Hugeicons via `add_icon` and updates them via `update_element` (fields: `icon`, `color`, `strokeWidth`, `shadow`). The curated icon library lives in `src/icons.ts`. The model must NEVER use emoji characters on canvas; always use `add_icon` instead.
 - Keep `inspect_slide` and `render_slide_preview` as the visual correction loop.
 - Keep edit mode scoped to its target slide.
+- Overlay assets (opt-in via the generate modal): `create_overlay_asset` calls OpenAI `gpt-image-2` through the AI SDK `generateImage` API and registers the result with `AiEditorController.addAsset`. Because `gpt-image-2` cannot emit transparency, generation always uses a flat `#FF00FF` chroma-key backdrop (`src/ai/overlay-asset-prompt.ts`). `remove_asset_background` then strips that key in-browser via Canvas (`src/ai/remove-chroma-key-background.ts`, pure pixel math in `src/ai/chroma-key.ts`) and registers a transparent PNG. Do not use these tools for mockups, device frames, or full screens — only cutout elements placed with `add_image`. Require `VITE_OPENAI_API_KEY` for the image call even when the chat model uses another provider. Never log generated image payloads.
 
 ## Editor integration
 

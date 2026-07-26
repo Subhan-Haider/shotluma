@@ -62,3 +62,22 @@ describe('AI prompt icons', () => {
     expect(instructions).toContain('NEVER use emoji')
   })
 })
+
+describe('AI prompt overlay assets', () => {
+  it('omits overlay asset guidance unless enabled', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).not.toContain('Overlay assets (gpt-image-2)')
+    expect(instructions).not.toContain('create_overlay_asset')
+  })
+
+  it('teaches the chroma-key workflow when overlay assets are enabled', () => {
+    const instructions = buildInstructions({ enableOverlayAssets: true })
+
+    expect(instructions).toContain('Overlay assets (gpt-image-2)')
+    expect(instructions).toContain('create_overlay_asset')
+    expect(instructions).toContain('remove_asset_background')
+    expect(instructions).toContain('#FF00FF')
+    expect(instructions).toContain('never full mockups')
+  })
+})

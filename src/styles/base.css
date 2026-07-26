@@ -563,6 +563,61 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .ai-modal-field input[type="password"], .ai-modal-field input[type="text"], .ai-modal-field textarea { width: 100%; border: 1px solid #d9d9d2; border-radius: 8px; background: white; padding: 10px 12px; font-size: 12px; color: #2b2b27; }
 .ai-modal-field textarea { resize: vertical; min-height: 92px; line-height: 1.4; }
 .ai-modal-hint { font-size: 9px; color: var(--muted); line-height: 1.4; }
+.ai-modal-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #d9d9d2;
+  border-radius: 9px;
+  background: white;
+  padding: 11px 12px;
+  cursor: pointer;
+  color: #2b2b27;
+}
+.ai-modal-toggle:hover:not(:disabled) { background: #f7f6f1; }
+.ai-modal-toggle:disabled { opacity: .55; cursor: not-allowed; }
+.ai-modal-toggle__track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: #d5d4cc;
+  transition: background .16s ease;
+}
+.ai-modal-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 2px rgba(20, 20, 16, .25);
+  transition: transform .16s ease;
+}
+.ai-modal-toggle.is-active .ai-modal-toggle__track { background: #2d6aff; }
+.ai-modal-toggle.is-active .ai-modal-toggle__thumb { transform: translateX(14px); }
+.ai-modal-toggle__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.ai-modal-toggle__copy b {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1px;
+}
+.ai-modal-toggle__copy span {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--muted);
+  font-weight: 500;
+}
 .ai-modal-prompt-helper { display: flex; flex-direction: column; gap: 6px; margin-top: 9px; }
 .ai-modal-copy-prompt { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; border: 1px dashed var(--border); background: var(--muted); color: var(--foreground); border-radius: var(--radius-md); padding: 8px 12px; font-size: 11px; font-weight: 620; cursor: pointer; }
 .ai-modal-copy-prompt:hover { background: var(--accent); border-color: var(--ring); }
