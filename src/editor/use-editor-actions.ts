@@ -3,7 +3,7 @@ import { makeTemplate } from '../data'
 import { getDevicePlacement } from '../mockups/catalog'
 import { fileToDataUrl, uid } from '../utils'
 import { freshElementIds } from './element-utils'
-import { removeSlide } from './slide-operations'
+import { panelRevealForAddedSlide, removeSlide } from './slide-operations'
 import type {
   Background,
   CanvasElement,
@@ -29,6 +29,7 @@ type EditorActionsOptions = {
   setActiveSlideId: Dispatch<SetStateAction<string>>
   setSelectedElementId: (id: string | null) => void
   setActiveTool: Dispatch<SetStateAction<ToolId>>
+  setIsSidebarOpen: Dispatch<SetStateAction<boolean>>
   setUploads: Dispatch<SetStateAction<UploadAsset[]>>
   setToast: Dispatch<SetStateAction<string | null>>
 }
@@ -152,6 +153,7 @@ export function useEditorActions({
   setActiveSlideId,
   setSelectedElementId,
   setActiveTool,
+  setIsSidebarOpen,
   setUploads,
   setToast,
 }: EditorActionsOptions) {
@@ -347,11 +349,22 @@ export function useEditorActions({
       },
       elements: [],
     }
+    const panelReveal = panelRevealForAddedSlide(slides.length)
     commit((current) => [...current, slide])
     setActiveSlideId(slide.id)
     setSelectedElementId(null)
-    setActiveTool('templates')
-  }, [commit, setActiveSlideId, setActiveTool, setSelectedElementId, slides.length])
+    if (panelReveal) {
+      setActiveTool(panelReveal.activeTool)
+      setIsSidebarOpen(panelReveal.openSidebar)
+    }
+  }, [
+    commit,
+    setActiveSlideId,
+    setActiveTool,
+    setIsSidebarOpen,
+    setSelectedElementId,
+    slides.length,
+  ])
 
   const duplicateSlide = useCallback((id: string) => {
     const sourceIndex = slides.findIndex((slide) => slide.id === id)
@@ -375,18 +388,23 @@ export function useEditorActions({
 
   const deleteSlide = useCallback((id: string) => {
     let nextActiveSlideId: string | null | undefined
+    let nextSlideCount: number | undefined
     commit((current) => {
       const removal = removeSlide(current, id, activeSlideId)
       if (!removal) return current
 
       nextActiveSlideId = removal.activeSlideId
+      nextSlideCount = removal.slides.length
       return removal.slides
     })
     if (nextActiveSlideId === undefined) return
 
     setActiveSlideId(nextActiveSlideId ?? '')
     setSelectedElementId(null)
-  }, [activeSlideId, commit, setActiveSlideId, setSelectedElementId])
+    // Keep the panel closed after returning to the empty state so AI
+    // generation does not inherit a previously open templates tab.
+    if (nextSlideCount === 0) setIsSidebarOpen(false)
+  }, [activeSlideId, commit, setActiveSlideId, setIsSidebarOpen, setSelectedElementId])
 
   const moveSlide = useCallback((id: string, direction: -1 | 1) => {
     commit((current) => {

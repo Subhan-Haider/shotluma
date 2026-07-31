@@ -200,12 +200,8 @@ export const makeTemplate = (template: TemplateId, name = 'Screen'): Slide => {
   }
 }
 
-export const createInitialSlides = () => [
-  makeTemplate('ink', 'Hook'),
-  makeTemplate('paper', 'Story'),
-  makeTemplate('lime', 'Features'),
-  makeTemplate('coral', 'Export'),
-]
+/** New projects start empty so the editor empty state can guide first creation. */
+export const createInitialSlides = (): Slide[] => []
 
 export const templateMeta: { id: TemplateId; name: string; eyebrow: string }[] = [
   { id: 'ink', name: 'Midnight pitch', eyebrow: 'Bold / product' },

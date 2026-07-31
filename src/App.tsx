@@ -28,7 +28,7 @@ export default function App() {
   const [activeSlideId, setActiveSlideId] = useState(initial.slides[0]?.id ?? '')
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([])
   const [activeTool, setActiveTool] = useState<ToolId>('templates')
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [zoom, setZoom] = useState(0.9)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -67,6 +67,7 @@ export default function App() {
     handleAiActivity(null)
     closeAi()
     resetHistory()
+    if (project.slides.length === 0) setIsSidebarOpen(false)
   }, [clearSelection, closeAi, handleAiActivity, resetHistory])
 
   const project = useProjectWorkspace({
@@ -154,6 +155,7 @@ export default function App() {
     setActiveSlideId,
     setSelectedElementId,
     setActiveTool,
+    setIsSidebarOpen,
     setUploads,
     setToast,
   })

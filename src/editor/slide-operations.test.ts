@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { removeSlide } from './slide-operations'
+import { panelRevealForAddedSlide, removeSlide } from './slide-operations'
 import type { Slide } from '../types'
 
 const slide = (id: string): Slide => ({
@@ -15,6 +15,15 @@ const slide = (id: string): Slide => ({
 })
 
 describe('slide operations', () => {
+  it('opens the templates panel only when adding the first manual screen', () => {
+    expect(panelRevealForAddedSlide(0)).toEqual({
+      activeTool: 'templates',
+      openSidebar: true,
+    })
+    expect(panelRevealForAddedSlide(1)).toBeNull()
+    expect(panelRevealForAddedSlide(4)).toBeNull()
+  })
+
   it('removes the only slide and leaves the project without an active slide', () => {
     const slides = [slide('only')]
 

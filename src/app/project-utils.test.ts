@@ -44,11 +44,11 @@ beforeEach(() => {
 })
 
 describe('project utilities', () => {
-  it('creates an initial project when no legacy state exists', () => {
+  it('creates an empty initial project when no legacy state exists', () => {
     const initial = loadInitialState()
 
     expect(initial.projectName).toBe(DEFAULT_PROJECT_NAME)
-    expect(initial.slides.length).toBeGreaterThan(0)
+    expect(initial.slides).toEqual([])
     expect(initial.uploads).toEqual([])
   })
 

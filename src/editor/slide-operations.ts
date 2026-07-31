@@ -1,9 +1,26 @@
-import type { Slide } from '../types'
+import type { Slide, ToolId } from '../types'
 
 export type SlideRemoval = {
   slides: Slide[]
   activeSlideId: string | null
 }
+
+export type SlidePanelReveal = {
+  activeTool: ToolId
+  openSidebar: true
+}
+
+/**
+ * Manual blank-screen creation from an empty project should open Templates.
+ * AI creation uses a separate path and must not reveal a tool panel.
+ */
+export const panelRevealForAddedSlide = (
+  slideCountBeforeAdd: number,
+): SlidePanelReveal | null => (
+  slideCountBeforeAdd === 0
+    ? { activeTool: 'templates', openSidebar: true }
+    : null
+)
 
 export const removeSlide = (
   slides: Slide[],

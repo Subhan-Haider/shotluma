@@ -40,7 +40,8 @@ Undo and redo operate on editor snapshots. A user action should create one meani
 
 A project can contain zero slides. In that state there is no active slide, the
 canvas presents blank and AI-assisted creation paths, and the empty slide array
-is persisted as normal. New projects still begin with starter slides.
+is persisted as normal. New projects begin empty so the editor empty state can
+guide the first blank or AI-created screen.
 
 ## Rendering and coordinates
 
