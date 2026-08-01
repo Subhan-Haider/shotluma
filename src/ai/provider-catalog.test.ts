@@ -83,11 +83,10 @@ describe('AI provider catalog', () => {
   })
 
   it('exposes only model-supported reasoning efforts to the AI SDK', () => {
-    expect(getAiProvider('openai').models[0]?.reasoningEfforts).toEqual([
-      'low',
-      'medium',
-      'high',
-      'xhigh',
+    expect(getAiProvider('openai').models.map((model) => model.reasoningEfforts)).toEqual([
+      ['low', 'medium', 'high', 'xhigh', 'max'],
+      ['low', 'medium', 'high', 'xhigh', 'max'],
+      ['low', 'medium', 'high', 'xhigh', 'max'],
     ])
     expect(getAiProvider('moonshot').models[0]?.reasoningEfforts).toEqual([
       'low',
@@ -99,6 +98,11 @@ describe('AI provider catalog', () => {
       model: 'gpt-5.6-sol',
       reasoningEffort: 'xhigh',
     })).toBe('xhigh')
+    expect(getAiSdkReasoningEffort({
+      provider: 'openai',
+      model: 'gpt-5.6-luna',
+      reasoningEffort: 'max',
+    })).toBe('max')
     expect(getAiSdkReasoningEffort({
       provider: 'openai',
       model: 'gpt-5.6-terra',
@@ -115,6 +119,13 @@ describe('AI provider catalog', () => {
     })).toBe('max')
     expect(toAiSdkReasoningEffort('high')).toBe('high')
     expect(toAiSdkReasoningEffort('max')).toBeUndefined()
+    expect(getAiStreamReasoningOptions({
+      provider: 'openai',
+      model: 'gpt-5.6-sol',
+      reasoningEffort: 'max',
+    })).toEqual({
+      providerOptions: { openai: { reasoningEffort: 'max' } },
+    })
     expect(getAiStreamReasoningOptions({
       provider: 'moonshot',
       model: 'kimi-k3',

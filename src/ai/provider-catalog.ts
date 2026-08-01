@@ -57,6 +57,15 @@ const STANDARD_REASONING_EFFORTS = [
   'xhigh',
 ] as const satisfies readonly AiReasoningEffort[]
 
+/** GPT-5.6 Luna / Terra / Sol: low … xhigh / max (`max` via providerOptions). */
+const OPENAI_REASONING_EFFORTS = [
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+  'max',
+] as const satisfies readonly AiReasoningEffort[]
+
 const XAI_REASONING_EFFORTS = [
   'low',
   'medium',
@@ -147,19 +156,19 @@ export const AI_PROVIDERS: readonly AiProviderOption[] = [
         id: 'gpt-5.6-terra',
         label: 'GPT-5.6 Terra',
         description: 'Recommended · balanced quality and cost',
-        reasoningEfforts: STANDARD_REASONING_EFFORTS,
+        reasoningEfforts: OPENAI_REASONING_EFFORTS,
       },
       {
         id: 'gpt-5.6-sol',
         label: 'GPT-5.6 Sol',
         description: 'Highest quality for agentic work',
-        reasoningEfforts: STANDARD_REASONING_EFFORTS,
+        reasoningEfforts: OPENAI_REASONING_EFFORTS,
       },
       {
         id: 'gpt-5.6-luna',
         label: 'GPT-5.6 Luna',
         description: 'Fast and cost-efficient',
-        reasoningEfforts: STANDARD_REASONING_EFFORTS,
+        reasoningEfforts: OPENAI_REASONING_EFFORTS,
       },
     ],
   },

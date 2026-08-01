@@ -87,6 +87,7 @@ describe('AI provider controls', () => {
     expect(openAiMarkup).toContain('Medium')
     expect(openAiMarkup).toContain('High')
     expect(openAiMarkup).toContain('XHigh')
+    expect(openAiMarkup).toContain('Max')
     expect(openAiMarkup).toContain('role="radiogroup"')
 
     const moonshotMarkup = renderToStaticMarkup(
