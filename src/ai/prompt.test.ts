@@ -48,6 +48,21 @@ describe('AI prompt branding', () => {
   })
 })
 
+describe('AI prompt space usage', () => {
+  it('demands the composition fill the tall canvas and flags dead zones as defects', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('FILL THE FRAME')
+    expect(instructions).toContain('span roughly the whole height')
+    expect(instructions).toContain(
+      'a large contiguous zone of the canvas (roughly a quarter or more) as bare background',
+    )
+    expect(instructions).toContain(
+      'does it actually fill the tall canvas or is a large stretch of it sitting empty',
+    )
+  })
+})
+
 describe('AI prompt icons', () => {
   it('instructs the model to use Hugeicons and never emoji', () => {
     const instructions = buildInstructions()

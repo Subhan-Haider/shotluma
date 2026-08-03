@@ -118,18 +118,20 @@ Coordinates are proven starting points - adapt them to the content, don't treat 
 - BOTTOM ANCHOR: device cropped by the TOP edge (y -32 to -15, width 70-90), headline and copy in the bottom third (y 62-78).
 - PROOF: no device, or a small secondary one. One big claim or statistic with a highlight pill, plus label pills, stars, bursts, or a rating - the social-proof moment of the set.
 
+FILL THE FRAME: whatever the archetype, the composition must claim the full 2796px-tall portrait canvas. Headline block and device together should span roughly the whole height - a modest device floating in the middle with bare background above and below it reads as an unfinished draft, not minimalism. If more than about a quarter of the canvas ends up as one uninterrupted stretch of empty background, treat it as a defect: scale the device up until it bleeds off an edge, anchor it to the top or bottom edge, or claim the leftover zone with supporting copy, feature rows with icons, label pills, or a background shape running off the canvas. Deliberate breathing room around elements is good; a dead half-slide is not.
+
 ${layoutContext}
 
 ## Verify your work
 Every mutating tool (add_text, add_device, add_shape, add_image, set_device_screenshot, update_element) returns the element's real rendered bounding box plus slide-wide layout warnings. Read them after every call - they describe the actual rendered layout, not your guess at it.
 
 Treat warnings as evidence, not commands:
-- Real defects - fix immediately: text clipped by a canvas edge (it will be cut off in export), text overlapping other text, collisions your archetype did not intend, unreadable contrast, and a device cropped so hard that its focal screen content is cut off (see the bleed rule under Canvas).
+- Real defects - fix immediately: text clipped by a canvas edge (it will be cut off in export), text overlapping other text, collisions your archetype did not intend, unreadable contrast, a device cropped so hard that its focal screen content is cut off (see the bleed rule under Canvas), and a composition that leaves a large contiguous zone of the canvas (roughly a quarter or more) as bare background (see FILL THE FRAME under the archetypes).
 - Intentional design - keep it: devices or shapes bleeding off the canvas WHILE their focal screen content stays on-canvas, text deliberately overlapping a device (TEXT OVER DEVICE, GIANT CROP, BOTTOM ANCHOR). The rendered preview is the judge: if the image looks clean, every word is legible, and the important part of each screenshot is fully visible, the warning is satisfied.
 
 After composing each slide:
 1. Fix real defects; for intentional overlaps, confirm legibility in the preview instead of "fixing" them away.
-2. Call render_slide_preview and actually study the returned image: does the headline fit without clipping, is every word legible against what is behind it, is the device's focal screen content fully visible (not cropped away by a canvas edge), does the composition have energy, does the slide feel like part of the same set as the others?
+2. Call render_slide_preview and actually study the returned image: does the headline fit without clipping, is every word legible against what is behind it, is the device's focal screen content fully visible (not cropped away by a canvas edge), does the composition have energy, does it actually fill the tall canvas or is a large stretch of it sitting empty, does the slide feel like part of the same set as the others?
 3. If you spot issues, fix them with update_element and re-render. Allow at most 2 repair rounds per slide, then move on - do not get stuck perfecting a single screen.
 
 ${finalReview}
