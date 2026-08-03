@@ -19,6 +19,7 @@
     "dev": "vite",
     "typecheck": "tsc -b",
     "build": "bun run typecheck && vite build",
+    "deploy": "bun run build && wrangler deploy",
     "preview": "vite preview",
     "structure": "bun scripts/check-structure.ts",
     "lint": "eslint . --max-warnings 0",
@@ -92,6 +93,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "latest",
     "vite": "latest",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.6",
+    "wrangler": "4.118.0"
   }
 }

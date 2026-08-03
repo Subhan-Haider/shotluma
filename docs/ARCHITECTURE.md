@@ -21,6 +21,11 @@ Browser → /api/ai-run-logs → Vite → ./ai-logs/*.json (developer opt-in)
 
 The core editor has no backend requirement. The optional AI path uses bring-your-own keys entered in the browser (`localStorage`), with optional `.env.local` `VITE_*` fallback served only during local development. Production builds replace all provider env values with empty strings. Google, Qwen, OpenAI, Anthropic, and xAI are called directly; Moonshot is enabled only on localhost and uses a same-origin proxy because its API does not support the required browser CORS flow.
 
+This public repository contains and deploys only the editor at
+`app.shotluma.com`. The marketing site at `shotluma.com` has a separate private
+source repository and Cloudflare Worker. Marketing source, assets, and
+production-only configuration must not be copied into this repository.
+
 ## Editor state and history
 
 `src/App.tsx` composes the application. Responsibilities are separated into:

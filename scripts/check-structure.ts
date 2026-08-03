@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -6,6 +7,16 @@ const baseStylesheet = path.join(sourceDirectory, 'styles/base.css')
 const themeStylesheet = path.join(sourceDirectory, 'styles/theme.css')
 
 const violations: string[] = []
+
+const privateMarketingPaths = [
+  path.join(sourceDirectory, 'landing'),
+  path.join(sourceDirectory, 'styles/landing.css'),
+]
+for (const privateMarketingPath of privateMarketingPaths) {
+  if (existsSync(privateMarketingPath)) {
+    violations.push(`${path.relative(path.resolve(import.meta.dirname, '..'), privateMarketingPath)} belongs in the private marketing repository.`)
+  }
+}
 
 const baseStyles = await readFile(baseStylesheet, 'utf8')
 const themeStyles = await readFile(themeStylesheet, 'utf8')
