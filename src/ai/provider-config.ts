@@ -10,6 +10,9 @@ import {
 
 export type AiProviderKeys = Record<AiProviderId, string>
 export type AiProviderAvailability = Record<AiProviderId, boolean>
+export type AiProviderKeyWriteResult =
+  | { ok: true }
+  | { ok: false; error: string }
 
 type AiProviderEnvironment = {
   VITE_MOONSHOT_API_KEY?: unknown
@@ -56,6 +59,33 @@ export const getAiProviderAvailability = (
   openai: keys.openai.length > 0,
   anthropic: keys.anthropic.length > 0,
   xai: keys.xai.length > 0,
+})
+
+const getBrowserHostname = (): string => {
+  try {
+    return typeof window === 'undefined' ? '' : window.location.hostname
+  } catch {
+    return ''
+  }
+}
+
+export const isLocalAiProxyHostname = (hostname: string): boolean => {
+  const normalized = hostname.trim().toLowerCase().replace(/^\[|\]$/g, '').replace(/\.+$/, '')
+  return normalized === 'localhost'
+    || normalized.endsWith('.localhost')
+    || normalized === '127.0.0.1'
+    || normalized === '::1'
+}
+
+export const getAiProviderTransportAvailability = (
+  hostname: string = getBrowserHostname(),
+): AiProviderAvailability => ({
+  moonshot: isLocalAiProxyHostname(hostname),
+  google: true,
+  qwen: true,
+  openai: true,
+  anthropic: true,
+  xai: true,
 })
 
 export const mergeAiProviderKeys = (
@@ -123,8 +153,13 @@ export const readStoredAiProviderKeys = (
 export const writeStoredAiProviderKeys = (
   keys: AiProviderKeys,
   storage: KeyStorage | null = getBrowserStorage(),
-): void => {
-  if (!storage) return
+): AiProviderKeyWriteResult => {
+  if (!storage) {
+    return {
+      ok: false,
+      error: 'Browser storage is unavailable. The API keys were not saved.',
+    }
+  }
   const normalized = createEmptyAiProviderKeys()
   let hasAny = false
   for (const providerId of PROVIDER_IDS) {
@@ -136,11 +171,15 @@ export const writeStoredAiProviderKeys = (
   try {
     if (!hasAny) {
       storage.removeItem(AI_PROVIDER_KEYS_STORAGE_KEY)
-      return
+      return { ok: true }
     }
     storage.setItem(AI_PROVIDER_KEYS_STORAGE_KEY, serializeStoredAiProviderKeys(normalized))
+    return { ok: true }
   } catch {
-    // Quota or privacy mode — leave the previous value untouched.
+    return {
+      ok: false,
+      error: 'The browser blocked local storage. The previous API keys were left unchanged.',
+    }
   }
 }
 
@@ -151,8 +190,16 @@ export const getResolvedAiProviderKeys = (
 
 export const getResolvedAiProviderAvailability = (
   storage: KeyStorage | null = getBrowserStorage(),
-): AiProviderAvailability =>
-  getAiProviderAvailability(getResolvedAiProviderKeys(storage))
+  hostname: string = getBrowserHostname(),
+): AiProviderAvailability => {
+  const keyAvailability = getAiProviderAvailability(getResolvedAiProviderKeys(storage))
+  const transportAvailability = getAiProviderTransportAvailability(hostname)
+  const availability = { ...keyAvailability }
+  for (const providerId of PROVIDER_IDS) {
+    availability[providerId] = keyAvailability[providerId] && transportAvailability[providerId]
+  }
+  return availability
+}
 
 export const getInitialAiSelection = (
   availability: AiProviderAvailability,

@@ -16,7 +16,10 @@ import {
   getAiStreamReasoningOptions,
   type AiModelSelection,
 } from './provider-catalog'
-import { getAiProviderKey } from './provider-config'
+import {
+  getAiProviderKey,
+  getAiProviderTransportAvailability,
+} from './provider-config'
 import {
   toAiRunTokenUsage,
   type AiRunReport,
@@ -140,6 +143,9 @@ const buildUserContent = (options: {
 }
 
 const createAiModel = async (selection: AiModelSelection) => {
+  if (!getAiProviderTransportAvailability()[selection.provider]) {
+    throw new Error('Moonshot requires the local Shotluma CORS proxy and is unavailable on this host')
+  }
   const apiKey = getAiProviderKey(selection.provider)
   if (!apiKey) {
     throw new Error(`${getAiProvider(selection.provider).envVar} is not configured`)

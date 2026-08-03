@@ -4,8 +4,11 @@ import {
   createAiProviderKeys,
   createEmptyAiProviderKeys,
   getAiProviderAvailability,
+  getAiProviderTransportAvailability,
   getInitialAiSelection,
   getResolvedAiProviderKeys,
+  getResolvedAiProviderAvailability,
+  isLocalAiProxyHostname,
   mergeAiProviderKeys,
   parseStoredAiProviderKeys,
   readStoredAiProviderKeys,
@@ -146,11 +149,11 @@ describe('AI provider configuration', () => {
     })
 
     const storage = createMemoryStorage()
-    writeStoredAiProviderKeys({
+    expect(writeStoredAiProviderKeys({
       ...createEmptyAiProviderKeys(),
       anthropic: 'claude-key',
       openai: '  ',
-    }, storage)
+    }, storage)).toEqual({ ok: true })
 
     expect(storage.getItem(AI_PROVIDER_KEYS_STORAGE_KEY)).toBe(
       serializeStoredAiProviderKeys({
@@ -163,7 +166,7 @@ describe('AI provider configuration', () => {
       anthropic: 'claude-key',
     })
 
-    writeStoredAiProviderKeys(createEmptyAiProviderKeys(), storage)
+    expect(writeStoredAiProviderKeys(createEmptyAiProviderKeys(), storage)).toEqual({ ok: true })
     expect(storage.getItem(AI_PROVIDER_KEYS_STORAGE_KEY)).toBeNull()
   })
 
@@ -173,5 +176,47 @@ describe('AI provider configuration', () => {
     })
 
     expect(getResolvedAiProviderKeys(storage).xai).toBe('grok-key')
+  })
+
+  it('reports browser storage failures instead of claiming that keys were saved', () => {
+    const throwingStorage = {
+      getItem: () => null,
+      setItem: () => {
+        throw new DOMException('Blocked', 'SecurityError')
+      },
+      removeItem: () => {
+        throw new DOMException('Blocked', 'SecurityError')
+      },
+    }
+
+    expect(writeStoredAiProviderKeys({
+      ...createEmptyAiProviderKeys(),
+      openai: 'openai-key',
+    }, throwingStorage)).toEqual({
+      ok: false,
+      error: 'The browser blocked local storage. The previous API keys were left unchanged.',
+    })
+    expect(writeStoredAiProviderKeys(createEmptyAiProviderKeys(), null)).toEqual({
+      ok: false,
+      error: 'Browser storage is unavailable. The API keys were not saved.',
+    })
+  })
+
+  it('allows the Moonshot proxy only on local browser hosts', () => {
+    expect(isLocalAiProxyHostname('localhost')).toBe(true)
+    expect(isLocalAiProxyHostname('studio.localhost.')).toBe(true)
+    expect(isLocalAiProxyHostname('127.0.0.1')).toBe(true)
+    expect(isLocalAiProxyHostname('[::1]')).toBe(true)
+    expect(isLocalAiProxyHostname('app.shotluma.com')).toBe(false)
+    expect(getAiProviderTransportAvailability('app.shotluma.com').moonshot).toBe(false)
+  })
+
+  it('does not mark a stored Moonshot key as usable without the local proxy', () => {
+    const storage = createMemoryStorage({
+      [AI_PROVIDER_KEYS_STORAGE_KEY]: JSON.stringify({ moonshot: 'moonshot-key' }),
+    })
+
+    expect(getResolvedAiProviderAvailability(storage, 'app.shotluma.com').moonshot).toBe(false)
+    expect(getResolvedAiProviderAvailability(storage, '127.0.0.1').moonshot).toBe(true)
   })
 })
