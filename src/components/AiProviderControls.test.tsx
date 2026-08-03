@@ -5,7 +5,7 @@ import type { ComponentProps, ReactNode } from 'react'
 
 vi.mock('./ui/select', () => ({
   Select: ({ children }: { children: ReactNode }) => <div>{children}</div>,
-  SelectContent: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  SelectContent: ({ children, ...props }: ComponentProps<'div'>) => <div {...props}>{children}</div>,
   SelectGroup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   SelectLabel: ({ children }: { children: ReactNode }) => <span>{children}</span>,
   SelectItem: ({ children }: { children: ReactNode }) => <span>{children}</span>,
@@ -14,6 +14,15 @@ vi.mock('./ui/select', () => ({
   ),
   SelectValue: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }))
+
+const availableTransports = {
+  moonshot: true,
+  google: true,
+  qwen: true,
+  openai: true,
+  anthropic: true,
+  xai: true,
+}
 
 vi.mock('./ui/button', () => ({
   Button: ({ children, ...props }: ComponentProps<'button'>) => (
@@ -34,6 +43,7 @@ describe('AI provider controls', () => {
           anthropic: true,
           xai: true,
         }}
+        transportAvailability={availableTransports}
         onModelSelect={() => undefined}
         onReasoningEffortChange={() => undefined}
         onManageKeys={() => undefined}
@@ -60,6 +70,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
         }}
+        transportAvailability={availableTransports}
         onModelSelect={() => undefined}
         onReasoningEffortChange={() => undefined}
         onManageKeys={() => undefined}
@@ -87,6 +98,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
         }}
+        transportAvailability={availableTransports}
         onModelSelect={() => undefined}
         onReasoningEffortChange={() => undefined}
         onManageKeys={() => undefined}
@@ -117,6 +129,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
         }}
+        transportAvailability={availableTransports}
         onModelSelect={() => undefined}
         onReasoningEffortChange={() => undefined}
         onManageKeys={() => undefined}
@@ -130,5 +143,29 @@ describe('AI provider controls', () => {
     expect(moonshotMarkup).not.toContain('Medium')
     expect(moonshotMarkup).not.toContain('Provider default')
     expect(moonshotMarkup).toContain('Moonshot · Kimi K3')
+  })
+
+  it('explains when the Moonshot proxy is unavailable instead of asking for a key', () => {
+    const markup = renderToStaticMarkup(
+      <AiProviderControls
+        selection={{ provider: 'moonshot', model: 'kimi-k3' }}
+        availability={{
+          moonshot: false,
+          google: false,
+          qwen: false,
+          openai: false,
+          anthropic: false,
+          xai: false,
+        }}
+        transportAvailability={{ ...availableTransports, moonshot: false }}
+        onModelSelect={() => undefined}
+        onReasoningEffortChange={() => undefined}
+        onManageKeys={() => undefined}
+      />,
+    )
+
+    expect(markup).toContain('Local proxy unavailable.')
+    expect(markup).toContain('Moonshot · local proxy unavailable')
+    expect(markup).not.toContain('Enter API key')
   })
 })

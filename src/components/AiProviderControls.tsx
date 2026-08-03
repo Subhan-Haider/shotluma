@@ -43,6 +43,7 @@ const AI_PROVIDER_ICONS: Record<AiProviderId, ComponentType<{ className?: string
 export type AiProviderControlsProps = {
   selection: AiModelSelection
   availability: AiProviderAvailability
+  transportAvailability: AiProviderAvailability
   onModelSelect: (providerId: AiProviderId, modelId: string) => void
   onReasoningEffortChange: (reasoningEffort: AiReasoningEffort) => void
   onManageKeys: (providerId: AiProviderId) => void
@@ -51,6 +52,7 @@ export type AiProviderControlsProps = {
 export const AiProviderControls = ({
   selection,
   availability,
+  transportAvailability,
   onModelSelect,
   onReasoningEffortChange,
   onManageKeys,
@@ -58,6 +60,7 @@ export const AiProviderControls = ({
   const provider = getAiProvider(selection.provider)
   const model = getAiModel(selection)
   const isConfigured = availability[selection.provider]
+  const isTransportAvailable = transportAvailability[selection.provider]
   const reasoningEffort = clampAiReasoningEffort(model, selection.reasoningEffort)
   const SelectedIcon = AI_PROVIDER_ICONS[selection.provider]
 
@@ -91,7 +94,11 @@ export const AiProviderControls = ({
                   <SelectLabel>
                     <ProviderIcon className="ai-provider-icon" size={14} />
                     <span>
-                      {availability[option.id] ? option.label : `${option.label} · key missing`}
+                      {availability[option.id]
+                        ? option.label
+                        : transportAvailability[option.id]
+                          ? `${option.label} · key missing`
+                          : `${option.label} · local proxy unavailable`}
                     </span>
                   </SelectLabel>
                   {option.models.map((modelOption) => (
@@ -145,17 +152,21 @@ export const AiProviderControls = ({
           <AlertCircle size={15} />
           <div className="ai-provider-warning-body">
             <span>
-              <b>API key missing.</b> Add your {provider.label} key to generate with this model.
+              {isTransportAvailable
+                ? <><b>API key missing.</b> Add your {provider.label} key to generate with this model.</>
+                : <><b>Local proxy unavailable.</b> Moonshot can be used only from localhost.</>}
             </span>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="ai-provider-warning-action"
-              onClick={() => onManageKeys(selection.provider)}
-            >
-              Enter API key
-            </Button>
+            {isTransportAvailable && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="ai-provider-warning-action"
+                onClick={() => onManageKeys(selection.provider)}
+              >
+                Enter API key
+              </Button>
+            )}
           </div>
         </div>
       )}

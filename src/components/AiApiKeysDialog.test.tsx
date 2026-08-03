@@ -40,7 +40,11 @@ describe('AI API keys dialog', () => {
     )
 
     expect(markup).toContain('API keys')
-    expect(markup).toContain('Keys stay in this browser')
+    expect(markup).toContain('How keys are stored')
+    expect(markup).toContain('stored unencrypted in this browser')
+    expect(markup).toContain('<details')
+    expect(markup).toContain('<summary>')
+    expect(markup).not.toContain('<details open=""')
     expect(markup).toContain('Moonshot')
     expect(markup).toContain('Google')
     expect(markup).toContain('Qwen')
@@ -48,6 +52,8 @@ describe('AI API keys dialog', () => {
     expect(markup).toContain('Anthropic')
     expect(markup).toContain('xAI')
     expect(markup).toContain('type="password"')
+    expect(markup).toContain('<form')
+    expect(markup).toContain('type="submit"')
     expect(markup).toContain('Save keys')
   })
 

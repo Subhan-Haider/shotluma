@@ -13,12 +13,14 @@ import {
 } from '../ai/provider-catalog'
 import {
   INITIAL_AI_SELECTION,
+  getAiProviderTransportAvailability,
   getResolvedAiProviderAvailability,
   type AiProviderAvailability,
 } from '../ai/provider-config'
 import { runAiGeneration, type AiRunEvent, type AiToolActivity } from '../ai/runner'
 import { fileToDataUrl, uid } from '../utils'
 import { filterAcceptedImageFiles } from './ai-modal-image-files'
+import { shouldCloseAiModalOnKeydown } from './ai-modal-keyboard'
 import { AiApiKeysDialog } from './AiApiKeysDialog'
 import { AiProviderControls } from './AiProviderControls'
 import { CopyCodingPromptButton } from './CopyCodingPrompt'
@@ -415,6 +417,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   const [keysDialogInstance, setKeysDialogInstance] = useState(0)
   const [keysFocusProviderId, setKeysFocusProviderId] = useState<AiProviderId | undefined>()
   const availability: AiProviderAvailability = getResolvedAiProviderAvailability()
+  const transportAvailability = getAiProviderTransportAvailability()
   void keysRevision
 
   const logoInputRef = useRef<HTMLInputElement>(null)
@@ -439,10 +442,11 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   useEffect(() => {
     if (!open || keysDialogOpen) return
     const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') requestClose()
+      const isNestedPopupOpen = Boolean(document.querySelector('[data-slot="select-content"]'))
+      if (shouldCloseAiModalOnKeydown(event, isNestedPopupOpen)) requestClose()
     }
-    window.addEventListener('keydown', handleKeydown)
-    return () => window.removeEventListener('keydown', handleKeydown)
+    window.addEventListener('keydown', handleKeydown, true)
+    return () => window.removeEventListener('keydown', handleKeydown, true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, phase, keysDialogOpen])
 
@@ -584,6 +588,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
                 <AiProviderControls
                   selection={selection}
                   availability={availability}
+                  transportAvailability={transportAvailability}
                   onModelSelect={handleModelSelect}
                   onReasoningEffortChange={(reasoningEffort) => {
                     setSelection((current) => ({ ...current, reasoningEffort }))

@@ -1,4 +1,9 @@
-import { useEffect, useId, useState } from 'react'
+import {
+  useEffect,
+  useId,
+  useState,
+  type SyntheticEvent,
+} from 'react'
 import {
   AI_PROVIDERS,
   type AiProviderId,
@@ -10,7 +15,7 @@ import {
   writeStoredAiProviderKeys,
   type AiProviderKeys,
 } from '../ai/provider-config'
-import { LockKeyhole } from './icons'
+import { ChevronDown, LockKeyhole } from './icons'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +45,7 @@ export const AiApiKeysDialog = ({
   const formId = useId()
   // Remount via parent `key` when opening so draft always loads from storage.
   const [draft, setDraft] = useState<AiProviderKeys>(readStoredAiProviderKeys)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -54,10 +60,19 @@ export const AiApiKeysDialog = ({
     return () => window.cancelAnimationFrame(frame)
   }, [open, focusProviderId, formId])
 
-  const handleSave = () => {
-    writeStoredAiProviderKeys(draft)
+  const saveDraft = () => {
+    const result = writeStoredAiProviderKeys(draft)
+    if (!result.ok) {
+      setSaveError(result.error)
+      return
+    }
     onSaved()
     onOpenChange(false)
+  }
+
+  const handleSave = (event: SyntheticEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    saveDraft()
   }
 
   const envAvailability = getAiProviderAvailability(ENVIRONMENT_AI_PROVIDER_KEYS)
@@ -71,45 +86,66 @@ export const AiApiKeysDialog = ({
           </AlertDialogMedia>
           <AlertDialogTitle>API keys</AlertDialogTitle>
           <AlertDialogDescription>
-            Keys stay in this browser and are sent only to the provider you select.
-            Optional <code>.env.local</code> values still work for local development.
+            Manage the provider keys used for AI generation.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="ai-keys-dialog-fields">
-          {AI_PROVIDERS.map((provider) => {
-            const inputId = `${formId}-${provider.id}`
-            const hasEnvFallback = envAvailability[provider.id] && !draft[provider.id]
-            return (
-              <label className="ai-keys-dialog-field" htmlFor={inputId} key={provider.id}>
-                <span>{provider.label}</span>
-                <Input
-                  id={inputId}
-                  type="password"
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder={hasEnvFallback ? 'Using .env.local' : 'Paste API key'}
-                  value={draft[provider.id]}
-                  onChange={(event) => {
-                    const value = event.target.value
-                    setDraft((current) => ({ ...current, [provider.id]: value }))
-                  }}
-                />
-              </label>
-            )
-          })}
-        </div>
+        <form
+          className="ai-keys-dialog-form"
+          onSubmit={handleSave}
+        >
+          <details className="ai-keys-dialog-disclosure">
+            <summary>
+              <span>How keys are stored</span>
+              <ChevronDown size={14} aria-hidden="true" />
+            </summary>
+            <p>
+              Keys are stored unencrypted in this browser. AI requests send a key only
+              to the provider used for that request; Moonshot passes through the local proxy,
+              and optional overlay assets use OpenAI. Use dedicated keys with strict limits.
+            </p>
+          </details>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel className="ai-keys-dialog-cancel">Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            type="button"
-            className="ai-keys-dialog-save"
-            onClick={handleSave}
-          >
-            Save keys
-          </AlertDialogAction>
-        </AlertDialogFooter>
+          <div className="ai-keys-dialog-fields">
+            {AI_PROVIDERS.map((provider) => {
+              const inputId = `${formId}-${provider.id}`
+              const hasEnvFallback = envAvailability[provider.id] && !draft[provider.id]
+              return (
+                <label className="ai-keys-dialog-field" htmlFor={inputId} key={provider.id}>
+                  <span>{provider.label}</span>
+                  <Input
+                    id={inputId}
+                    type="password"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder={hasEnvFallback ? 'Using .env.local' : 'Paste API key'}
+                    value={draft[provider.id]}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Enter' || event.nativeEvent.isComposing) return
+                      event.preventDefault()
+                      saveDraft()
+                    }}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      setSaveError(null)
+                      setDraft((current) => ({ ...current, [provider.id]: value }))
+                    }}
+                  />
+                </label>
+              )
+            })}
+          </div>
+
+          {saveError && <p className="ai-keys-dialog-error" role="alert">{saveError}</p>}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel className="ai-keys-dialog-cancel">Cancel</AlertDialogCancel>
+            <AlertDialogAction type="submit" className="ai-keys-dialog-save">
+              Save keys
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </form>
       </AlertDialogContent>
     </AlertDialog>
   )

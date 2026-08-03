@@ -252,6 +252,54 @@ select:focus-visible {
   gap: 12px;
   padding: 4px 18px 16px;
 }
+.ai-keys-dialog-form { display: contents; }
+.ai-keys-dialog-disclosure {
+  margin: 0 18px 14px;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  background: color-mix(in oklch, var(--muted) 70%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.ai-keys-dialog-disclosure summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 32px;
+  padding: 7px 10px;
+  color: var(--foreground);
+  font-size: 10px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.ai-keys-dialog-disclosure summary::-webkit-details-marker { display: none; }
+.ai-keys-dialog-disclosure summary:hover { background: var(--accent); }
+.ai-keys-dialog-disclosure summary:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px color-mix(in oklch, var(--ring) 45%, transparent);
+}
+.ai-keys-dialog-disclosure summary svg {
+  flex: 0 0 auto;
+  transition: transform 120ms ease;
+}
+.ai-keys-dialog-disclosure[open] summary svg { transform: rotate(180deg); }
+.ai-keys-dialog-disclosure p {
+  margin: 0;
+  padding: 9px 10px 10px;
+  border-top: 1px solid var(--border);
+}
+.ai-keys-dialog-error {
+  margin: -4px 18px 14px;
+  color: var(--destructive);
+  font-size: 10px;
+  font-weight: 540;
+  line-height: 1.4;
+}
 .ai-keys-dialog-field {
   display: flex;
   flex-direction: column;
