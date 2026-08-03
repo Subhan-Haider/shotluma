@@ -28,12 +28,12 @@ Maintainers will acknowledge reports and coordinate a fix and disclosure on a be
 
 ## Security boundaries
 
-- AI provider keys are entered in the browser and stored in `localStorage`, or optionally via `VITE_*` variables in `.env.local` for local development. Both are intentionally visible to the local browser. Use dedicated keys with restrictive quotas where possible.
+- AI provider keys are entered in the browser and stored unencrypted in `localStorage`, or optionally supplied through `VITE_*` variables to the local development server. They are accessible to same-origin JavaScript, so use dedicated keys with restrictive quotas and remove them on shared browser profiles.
 - `.env.local` is ignored by Git and must remain untracked.
-- Never publish or deploy a build created with provider keys configured in the environment.
+- Production builds replace provider env keys with empty values. Do not remove this build boundary or publish a manually altered keyed bundle.
 - Uploaded images and projects stay in IndexedDB during normal editing.
-- Screenshots selected for an AI run are sent to the selected provider. Google, Qwen, OpenAI, and Anthropic are contacted directly; Moonshot goes through the same-origin local CORS proxy.
+- Screenshots selected for an AI run are sent to the selected provider. Google, Qwen, OpenAI, Anthropic, and xAI are contacted directly; Moonshot works only on localhost through the same-origin local CORS proxy. Opt-in overlay generation contacts OpenAI separately.
 - Users are responsible for protecting provider keys and usage quotas.
-- A hosted AI-enabled deployment requires an authenticated backend and must not reuse the localhost-only key setup.
+- A hosted deployment can use browser-entered keys with the direct providers. A deployment that supplies shared credentials or offers Moonshot requires a separate authenticated backend design.
 
 If a key is accidentally exposed, revoke it at the provider immediately, remove it from the current files, and treat it as compromised even if the Git commit is later rewritten.

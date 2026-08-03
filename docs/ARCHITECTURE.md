@@ -19,7 +19,7 @@ Browser → /api/moonshot/* → Vite proxy → Moonshot API
 Browser → /api/ai-run-logs → Vite → ./ai-logs/*.json (developer opt-in)
 ```
 
-The core editor has no backend requirement. The optional AI path uses bring-your-own keys entered in the browser (`localStorage`), with optional `.env.local` `VITE_*` fallback for local development. Google, Qwen, OpenAI, Anthropic, and xAI are called directly; Moonshot alone uses a local same-origin proxy because its API does not support the required browser CORS flow. Do not bake provider keys into a deployed build.
+The core editor has no backend requirement. The optional AI path uses bring-your-own keys entered in the browser (`localStorage`), with optional `.env.local` `VITE_*` fallback served only during local development. Production builds replace all provider env values with empty strings. Google, Qwen, OpenAI, Anthropic, and xAI are called directly; Moonshot is enabled only on localhost and uses a same-origin proxy because its API does not support the required browser CORS flow.
 
 ## Editor state and history
 
@@ -132,7 +132,7 @@ Rich text is built from structured highlight input. The model never writes raw H
 
 `src/ai/provider-catalog.ts` owns the selectable providers, models, transport metadata, and model-specific reasoning-effort choices. `src/ai/provider-config.ts` resolves keys from browser `localStorage` (API keys dialog) with optional `.env.local` `VITE_*` fallback, and `src/ai/runner.ts` lazily loads the selected native AI SDK provider. The runner passes portable efforts through the AI SDK's standardized `reasoning` option so each native provider can map it to its own API; OpenAI GPT-5.6 and Moonshot/Kimi K3 `max` go through OpenAI-compat `providerOptions` because the shared option has no `max`. The generate modal presents one model picker grouped by provider, with reasoning effort as secondary chips when the model supports it, plus an API keys dialog when a provider is unconfigured. Requests go directly from the local browser to Google, Alibaba/Qwen, OpenAI, Anthropic, or xAI. Moonshot uses the OpenAI chat provider through the only Vite proxy route.
 
-Keys are intentionally browser-visible. Never commit `.env.local` or bake provider keys into a deployed build. A hosted deployment that must hide credentials needs an authenticated backend.
+Keys are intentionally browser-visible and stored unencrypted. Never commit `.env.local` or weaken the production-build stripping of provider env values. Use dedicated keys with restrictive quotas. A hosted deployment that must hide or share credentials needs an authenticated backend.
 
 ## UI system
 

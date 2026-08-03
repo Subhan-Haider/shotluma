@@ -55,7 +55,7 @@ Projects save automatically to the current browser profile. Clearing site data d
 
 ## Set up AI generation
 
-AI generation needs an API key for at least one provider — everything else in the editor works without one. Enter keys in the generation dialog (**API keys** / **Enter API key**); they stay in this browser's `localStorage`.
+AI generation needs an API key for at least one provider — everything else in the editor works without one. Enter keys in the generation dialog (**API keys** / **Enter API key**); they are stored unencrypted in this browser's `localStorage`. Use dedicated provider keys with restrictive quotas, and remove them before sharing the browser profile or device.
 
 For local development you can still use `.env.local` as a fallback:
 
@@ -76,9 +76,9 @@ Restart the dev server after changing `.env.local` keys. Pick the provider and m
 
 How it works, and what to know:
 
-- Google, Qwen, OpenAI, Anthropic, and xAI are called directly from the browser via the AI SDK. Only Moonshot goes through the local `/api/moonshot` CORS proxy.
+- Google, Qwen, OpenAI, Anthropic, and xAI are called directly from the browser via the AI SDK. Moonshot works only on localhost through the local `/api/moonshot` CORS proxy.
 - When you start a run, your description and selected screenshots are sent to that provider. Normal editing, persistence, and export never call any AI service. Provider charges may apply.
-- Browser-stored keys and optional `VITE_*` env keys are visible to the client by design. Never commit `.env.local` or deploy a build that bakes provider keys into the bundle (see [Self-hosting](#self-hosting)).
+- Browser-stored keys are visible to same-origin JavaScript by design. Optional `VITE_*` keys are exposed only by the local dev server; production builds replace every provider env key with an empty value. Never commit `.env.local` (see [Self-hosting](#self-hosting)).
 - Prompts can be written in any language; generated canvas copy and summaries are in English.
 
 For debugging, set `SHOTLUMA_AI_LOGGING=true` in `.env.local` to write one JSON file per run to the git-ignored `ai-logs/` directory. Logs record provider, model, timing, visible model output, tool activity, and token usage — never prompt text, screenshots, or API keys.
@@ -94,7 +94,7 @@ For debugging, set `SHOTLUMA_AI_LOGGING=true` in `.env.local` to write one JSON 
 | `bun run test` | Run the Vitest suite once |
 | `bun run test:coverage` | Tests with coverage thresholds |
 | `bun run build` | Type-check and build the production bundle |
-| `bun run preview` | Serve the production bundle, including the Moonshot proxy |
+| `bun run preview` | Serve the production bundle locally, including the Moonshot proxy |
 | `bun run audit` | Check dependencies for known vulnerabilities |
 | `bun run check` | All required local and CI quality gates |
 
@@ -102,9 +102,16 @@ Changes to rendering, export, or AI behavior also need manual verification in th
 
 ## Self-hosting
 
-`bun run build` produces a static app in `dist/`. Built **without** provider keys, it can be hosted anywhere as a static site.
+`bun run build` produces a static app in `dist/`. Provider env values are stripped from this bundle, so it can be hosted as a static site while users supply their own direct-provider keys in the browser.
 
-Do not host an AI-enabled build: Vite embeds `VITE_*` values into the client bundle, so any configured key becomes public. A hosted AI workflow would need its own authenticated backend or a short-lived credential exchange — neither is included here.
+The official editor is deployed at `https://app.shotluma.com`. The marketing
+site at `https://shotluma.com` is maintained and deployed separately; its source
+and production configuration are not part of this repository.
+
+Google, Qwen, OpenAI, Anthropic, and xAI work with browser-entered keys. Moonshot
+remains local-only; offering it on a hosted deployment requires an authenticated
+proxy. A hosted workflow with shared credentials likewise needs a backend or
+short-lived credential exchange.
 
 ## Architecture
 
