@@ -177,7 +177,7 @@ PROMPTING: describe ONLY the subject — one object, its material, style, colors
       if (!apiKey) {
         return {
           ok: false,
-          error: 'OpenAI API key missing. Add VITE_OPENAI_API_KEY to .env.local to generate overlay assets.',
+          error: 'OpenAI API key missing. Add an OpenAI key in API keys to generate overlay assets.',
         }
       }
 

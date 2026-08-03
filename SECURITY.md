@@ -28,9 +28,9 @@ Maintainers will acknowledge reports and coordinate a fix and disclosure on a be
 
 ## Security boundaries
 
-- AI provider keys use `VITE_*` variables and are intentionally visible to the local browser. Use dedicated local-development keys with restrictive quotas where possible.
+- AI provider keys are entered in the browser and stored in `localStorage`, or optionally via `VITE_*` variables in `.env.local` for local development. Both are intentionally visible to the local browser. Use dedicated keys with restrictive quotas where possible.
 - `.env.local` is ignored by Git and must remain untracked.
-- Never publish or deploy a build created with provider keys configured.
+- Never publish or deploy a build created with provider keys configured in the environment.
 - Uploaded images and projects stay in IndexedDB during normal editing.
 - Screenshots selected for an AI run are sent to the selected provider. Google, Qwen, OpenAI, and Anthropic are contacted directly; Moonshot goes through the same-origin local CORS proxy.
 - Users are responsible for protecting provider keys and usage quotas.

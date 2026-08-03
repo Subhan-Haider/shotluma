@@ -18,6 +18,7 @@ import {
   KimiAi,
   Qwen,
 } from './icons'
+import { Button } from './ui/button'
 import {
   Select,
   SelectContent,
@@ -44,6 +45,7 @@ export type AiProviderControlsProps = {
   availability: AiProviderAvailability
   onModelSelect: (providerId: AiProviderId, modelId: string) => void
   onReasoningEffortChange: (reasoningEffort: AiReasoningEffort) => void
+  onManageKeys: (providerId: AiProviderId) => void
 }
 
 export const AiProviderControls = ({
@@ -51,6 +53,7 @@ export const AiProviderControls = ({
   availability,
   onModelSelect,
   onReasoningEffortChange,
+  onManageKeys,
 }: AiProviderControlsProps) => {
   const provider = getAiProvider(selection.provider)
   const model = getAiModel(selection)
@@ -127,13 +130,33 @@ export const AiProviderControls = ({
           </div>
         </div>
       )}
-      <small className="ai-provider-description">{model.description}</small>
+      <div className="ai-provider-meta">
+        <small className="ai-provider-description">{model.description}</small>
+        <button
+          type="button"
+          className="ai-provider-keys-link"
+          onClick={() => onManageKeys(selection.provider)}
+        >
+          API keys
+        </button>
+      </div>
       {!isConfigured && (
         <div className="ai-provider-warning" role="alert">
           <AlertCircle size={15} />
-          <span>
-            <b>API key missing.</b> Add <code>{provider.envVar}</code> to <code>.env.local</code> and restart the app.
-          </span>
+          <div className="ai-provider-warning-body">
+            <span>
+              <b>API key missing.</b> Add your {provider.label} key to generate with this model.
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="ai-provider-warning-action"
+              onClick={() => onManageKeys(selection.provider)}
+            >
+              Enter API key
+            </Button>
+          </div>
         </div>
       )}
     </div>

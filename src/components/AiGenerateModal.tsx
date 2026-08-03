@@ -12,12 +12,14 @@ import {
   type AiProviderId,
 } from '../ai/provider-catalog'
 import {
-  AI_PROVIDER_AVAILABILITY,
   INITIAL_AI_SELECTION,
+  getResolvedAiProviderAvailability,
+  type AiProviderAvailability,
 } from '../ai/provider-config'
 import { runAiGeneration, type AiRunEvent, type AiToolActivity } from '../ai/runner'
 import { fileToDataUrl, uid } from '../utils'
 import { filterAcceptedImageFiles } from './ai-modal-image-files'
+import { AiApiKeysDialog } from './AiApiKeysDialog'
 import { AiProviderControls } from './AiProviderControls'
 import { CopyCodingPromptButton } from './CopyCodingPrompt'
 import { StartUp02, Upload, X } from './icons'
@@ -291,7 +293,7 @@ const IdleContent = ({
       <small className="ai-modal-hint">
         {overlayAssetsAvailable
           ? 'On: expect 1–2 generated graphics, billed to your OpenAI key. Overlay elements only — never mockups or device frames.'
-          : 'Requires VITE_OPENAI_API_KEY in .env.local (separate from the chat model above).'}
+          : 'Requires an OpenAI API key (separate from the chat model above). Enter it via API keys.'}
       </small>
     </div>
   </>
@@ -408,6 +410,12 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   const [doneInfo, setDoneInfo] = useState<{ summary: string; slidesCreated: number } | null>(null)
   const [selection, setSelection] = useState<AiModelSelection>(INITIAL_AI_SELECTION)
   const [enableOverlayAssets, setEnableOverlayAssets] = useState(false)
+  const [keysRevision, setKeysRevision] = useState(0)
+  const [keysDialogOpen, setKeysDialogOpen] = useState(false)
+  const [keysDialogInstance, setKeysDialogInstance] = useState(0)
+  const [keysFocusProviderId, setKeysFocusProviderId] = useState<AiProviderId | undefined>()
+  const availability: AiProviderAvailability = getResolvedAiProviderAvailability()
+  void keysRevision
 
   const logoInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -423,27 +431,37 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   }, [log, assistantText])
 
   const requestClose = () => {
-    if (phase === 'running') return
+    if (phase === 'running' || keysDialogOpen) return
     setPhase('idle')
     onClose()
   }
 
   useEffect(() => {
-    if (!open) return
+    if (!open || keysDialogOpen) return
     const handleKeydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') requestClose()
     }
     window.addEventListener('keydown', handleKeydown)
     return () => window.removeEventListener('keydown', handleKeydown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, phase])
+  }, [open, phase, keysDialogOpen])
 
   if (!open) return null
 
   const isEditMode = Boolean(targetSlide)
   const canGenerate = Boolean(description.trim())
     && (isEditMode || (Boolean(appName.trim()) && logo !== null && screenshots.length > 0))
-    && AI_PROVIDER_AVAILABILITY[selection.provider]
+    && availability[selection.provider]
+
+  const refreshAvailability = () => {
+    setKeysRevision((current) => current + 1)
+  }
+
+  const handleManageKeys = (providerId: AiProviderId) => {
+    setKeysFocusProviderId(providerId)
+    setKeysDialogInstance((current) => current + 1)
+    setKeysDialogOpen(true)
+  }
 
   const handleLogoFiles = async (files: File[]) => {
     const [file] = filterAcceptedImageFiles(files)
@@ -521,7 +539,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
       ...(preparedLogo ? { logo: preparedLogo } : {}),
       controller,
       ...(targetSlide ? { targetSlideId: targetSlide.id } : {}),
-      ...(enableOverlayAssets && AI_PROVIDER_AVAILABILITY.openai
+      ...(enableOverlayAssets && availability.openai
         ? { enableOverlayAssets: true }
         : {}),
       signal: abortController.signal,
@@ -543,87 +561,97 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   }
 
   return (
-    <div
-      className={`ai-modal-overlay${phase !== 'idle' ? ' ai-modal-overlay--live' : ''}`}
-      onMouseDown={(event) => { if (event.target === event.currentTarget) requestClose() }}
-    >
-      <div className="ai-modal-card" role="dialog" aria-modal="true" aria-label={isEditMode ? 'Edit screen with AI' : 'Generate with AI'}>
-        <div className="ai-modal-header">
-          <div className="ai-modal-title">
-            <StartUp02 size={16} />
-            <div>
-              <h2>{isEditMode ? 'Edit screen with AI' : 'Generate with AI'}</h2>
-              {targetSlide && <span>{targetSlide.name}</span>}
+    <>
+      <div
+        className={`ai-modal-overlay${phase !== 'idle' ? ' ai-modal-overlay--live' : ''}`}
+        onMouseDown={(event) => { if (event.target === event.currentTarget) requestClose() }}
+      >
+        <div className="ai-modal-card" role="dialog" aria-modal="true" aria-label={isEditMode ? 'Edit screen with AI' : 'Generate with AI'}>
+          <div className="ai-modal-header">
+            <div className="ai-modal-title">
+              <StartUp02 size={16} />
+              <div>
+                <h2>{isEditMode ? 'Edit screen with AI' : 'Generate with AI'}</h2>
+                {targetSlide && <span>{targetSlide.name}</span>}
+              </div>
             </div>
+            <button className="ai-modal-close" onClick={requestClose} disabled={phase === 'running'} aria-label="Close"><X size={16} /></button>
           </div>
-          <button className="ai-modal-close" onClick={requestClose} disabled={phase === 'running'} aria-label="Close"><X size={16} /></button>
-        </div>
 
-        <div className="ai-modal-body">
-          {phase === 'idle' && (
-            <>
-              <AiProviderControls
-                selection={selection}
-                availability={AI_PROVIDER_AVAILABILITY}
-                onModelSelect={handleModelSelect}
-                onReasoningEffortChange={(reasoningEffort) => {
-                  setSelection((current) => ({ ...current, reasoningEffort }))
-                }}
-              />
-              <IdleContent
-                isEditMode={isEditMode}
-                appName={appName}
-                description={description}
-                logo={logo}
-                screenshots={screenshots}
-                enableOverlayAssets={enableOverlayAssets && AI_PROVIDER_AVAILABILITY.openai}
-                overlayAssetsAvailable={AI_PROVIDER_AVAILABILITY.openai}
-                logoInputRef={logoInputRef}
-                fileInputRef={fileInputRef}
-                onAppNameChange={setAppName}
-                onDescriptionChange={setDescription}
-                onLogoFiles={(files) => {
-                  void handleLogoFiles(files)
-                }}
-                onRemoveLogo={() => setLogo(null)}
-                onScreenshotFiles={(files) => {
-                  void handleScreenshotFiles(files)
-                }}
-                onRemoveScreenshot={removeScreenshot}
-                onEnableOverlayAssetsChange={setEnableOverlayAssets}
-              />
-            </>
-          )}
+          <div className="ai-modal-body">
+            {phase === 'idle' && (
+              <>
+                <AiProviderControls
+                  selection={selection}
+                  availability={availability}
+                  onModelSelect={handleModelSelect}
+                  onReasoningEffortChange={(reasoningEffort) => {
+                    setSelection((current) => ({ ...current, reasoningEffort }))
+                  }}
+                  onManageKeys={handleManageKeys}
+                />
+                <IdleContent
+                  isEditMode={isEditMode}
+                  appName={appName}
+                  description={description}
+                  logo={logo}
+                  screenshots={screenshots}
+                  enableOverlayAssets={enableOverlayAssets && availability.openai}
+                  overlayAssetsAvailable={availability.openai}
+                  logoInputRef={logoInputRef}
+                  fileInputRef={fileInputRef}
+                  onAppNameChange={setAppName}
+                  onDescriptionChange={setDescription}
+                  onLogoFiles={(files) => {
+                    void handleLogoFiles(files)
+                  }}
+                  onRemoveLogo={() => setLogo(null)}
+                  onScreenshotFiles={(files) => {
+                    void handleScreenshotFiles(files)
+                  }}
+                  onRemoveScreenshot={removeScreenshot}
+                  onEnableOverlayAssetsChange={setEnableOverlayAssets}
+                />
+              </>
+            )}
 
-          {phase === 'running' && (
-            <RunningContent
-              log={log}
-              logRef={logRef}
-              reasoningTail={reasoningTail}
+            {phase === 'running' && (
+              <RunningContent
+                log={log}
+                logRef={logRef}
+                reasoningTail={reasoningTail}
+                assistantText={assistantText}
+              />
+            )}
+            <ResultContent
+              phase={phase}
+              doneInfo={doneInfo}
+              isEditMode={isEditMode}
               assistantText={assistantText}
+              errorMessage={errorMessage}
             />
-          )}
-          <ResultContent
-            phase={phase}
-            doneInfo={doneInfo}
-            isEditMode={isEditMode}
-            assistantText={assistantText}
-            errorMessage={errorMessage}
-          />
-        </div>
+          </div>
 
-        <div className="ai-modal-footer">
-          <ModalFooter
-            phase={phase}
-            isEditMode={isEditMode}
-            canGenerate={canGenerate}
-            onGenerate={() => void handleGenerate()}
-            onCancel={handleCancel}
-            onClose={requestClose}
-            onRetry={handleRetry}
-          />
+          <div className="ai-modal-footer">
+            <ModalFooter
+              phase={phase}
+              isEditMode={isEditMode}
+              canGenerate={canGenerate}
+              onGenerate={() => void handleGenerate()}
+              onCancel={handleCancel}
+              onClose={requestClose}
+              onRetry={handleRetry}
+            />
+          </div>
         </div>
       </div>
-    </div>
+      <AiApiKeysDialog
+        key={keysDialogInstance}
+        open={keysDialogOpen}
+        {...(keysFocusProviderId ? { focusProviderId: keysFocusProviderId } : {})}
+        onOpenChange={setKeysDialogOpen}
+        onSaved={refreshAvailability}
+      />
+    </>
   )
 }

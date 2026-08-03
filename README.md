@@ -55,7 +55,9 @@ Projects save automatically to the current browser profile. Clearing site data d
 
 ## Set up AI generation
 
-AI generation needs an API key for at least one provider — everything else in the editor works without one. Keys go in `.env.local`:
+AI generation needs an API key for at least one provider — everything else in the editor works without one. Enter keys in the generation dialog (**API keys** / **Enter API key**); they stay in this browser's `localStorage`.
+
+For local development you can still use `.env.local` as a fallback:
 
 ```bash
 cp .env.example .env.local
@@ -70,13 +72,13 @@ VITE_ANTHROPIC_API_KEY=
 VITE_XAI_API_KEY=
 ```
 
-Restart the dev server after changing keys. Pick the provider and model in the generation dialog — models with configurable reasoning also expose their effort levels there. If a selected provider has no key, the dialog names the missing variable and disables generation.
+Restart the dev server after changing `.env.local` keys. Pick the provider and model in the generation dialog — models with configurable reasoning also expose their effort levels there. If a selected provider has no key, the dialog offers **Enter API key** and disables generation until one is saved.
 
 How it works, and what to know:
 
 - Google, Qwen, OpenAI, Anthropic, and xAI are called directly from the browser via the AI SDK. Only Moonshot goes through the local `/api/moonshot` CORS proxy.
 - When you start a run, your description and selected screenshots are sent to that provider. Normal editing, persistence, and export never call any AI service. Provider charges may apply.
-- The `VITE_*` keys are embedded in client code by design — this setup is **localhost-only**. Never commit `.env.local` or deploy a keyed build (see [Self-hosting](#self-hosting)).
+- Browser-stored keys and optional `VITE_*` env keys are visible to the client by design. Never commit `.env.local` or deploy a build that bakes provider keys into the bundle (see [Self-hosting](#self-hosting)).
 - Prompts can be written in any language; generated canvas copy and summaries are in English.
 
 For debugging, set `SHOTLUMA_AI_LOGGING=true` in `.env.local` to write one JSON file per run to the git-ignored `ai-logs/` directory. Logs record provider, model, timing, visible model output, tool activity, and token usage — never prompt text, screenshots, or API keys.

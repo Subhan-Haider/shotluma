@@ -185,7 +185,7 @@ const describeError = (error: unknown, selection: AiModelSelection): string => {
   if (APICallError.isInstance(error)) {
     if (error.statusCode === 401 || error.statusCode === 403) {
       const provider = getAiProvider(selection.provider)
-      return `${provider.label} API error (${error.statusCode}) — check ${provider.envVar} in .env.local and restart the app. ${error.message}`
+      return `${provider.label} API error (${error.statusCode}) — check the API key for ${provider.label} and try again. ${error.message}`
     }
     return error.message
   }

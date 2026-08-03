@@ -197,6 +197,118 @@ select:focus-visible {
 .project-delete-dialog .project-delete-confirm:hover { color: white; background: color-mix(in oklch, var(--destructive) 88%, black); }
 .project-delete-dialog button:focus-visible { outline: none; box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring) 45%, transparent); }
 
+.ai-keys-dialog {
+  width: min(calc(100vw - 32px), 380px);
+  max-width: 380px;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 48px oklch(0 0 0 / 18%), 0 2px 8px oklch(0 0 0 / 8%);
+}
+.ai-keys-dialog [data-slot='alert-dialog-header'] {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  place-items: start;
+  gap: 3px 12px;
+  padding: 18px 18px 14px;
+  text-align: left;
+}
+.ai-keys-dialog [data-slot='alert-dialog-media'],
+.ai-keys-dialog .ai-keys-dialog-media {
+  grid-row: 1 / span 2;
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  color: var(--foreground);
+  background: var(--muted);
+  border-radius: var(--radius-md);
+}
+.ai-keys-dialog [data-slot='alert-dialog-title'] {
+  grid-column: 2;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 580;
+  line-height: 18px;
+  letter-spacing: 0;
+}
+.ai-keys-dialog [data-slot='alert-dialog-description'] {
+  grid-column: 2;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 16px;
+  text-wrap: pretty;
+}
+.ai-keys-dialog [data-slot='alert-dialog-description'] code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  font-size: .92em;
+  color: var(--foreground);
+}
+.ai-keys-dialog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 18px 16px;
+}
+.ai-keys-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 11px;
+  font-weight: 620;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.ai-keys-dialog-field [data-slot='input'] {
+  height: 32px;
+  font-size: var(--editor-text-sm);
+  font-weight: 500;
+}
+.ai-keys-dialog [data-slot='alert-dialog-footer'] {
+  margin: 0;
+  padding: 11px 14px 13px;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 7px;
+  background: var(--muted);
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.ai-keys-dialog [data-slot='alert-dialog-action'],
+.ai-keys-dialog [data-slot='alert-dialog-cancel'] {
+  min-width: 78px;
+  height: 29px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  font-weight: 520;
+  line-height: 1;
+}
+.ai-keys-dialog .ai-keys-dialog-cancel {
+  color: var(--foreground);
+  background: var(--background);
+  border-color: var(--input);
+}
+.ai-keys-dialog .ai-keys-dialog-cancel:hover { background: var(--accent); }
+.ai-keys-dialog .ai-keys-dialog-save {
+  color: white;
+  background: var(--foreground);
+  border-color: var(--foreground);
+}
+.ai-keys-dialog .ai-keys-dialog-save:hover {
+  color: white;
+  background: color-mix(in oklch, var(--foreground) 88%, black);
+}
+.ai-keys-dialog button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring) 45%, transparent);
+}
+
 .history-actions button:hover {
   background: var(--accent);
   color: var(--accent-foreground);

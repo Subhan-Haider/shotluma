@@ -20,8 +20,21 @@ type AiProviderEnvironment = {
   VITE_XAI_API_KEY?: unknown
 }
 
+export const AI_PROVIDER_KEYS_STORAGE_KEY = 'shotluma-ai-provider-keys'
+
+const PROVIDER_IDS = AI_PROVIDERS.map((provider) => provider.id)
+
 const readKey = (value: unknown): string =>
   typeof value === 'string' ? value.trim() : ''
+
+export const createEmptyAiProviderKeys = (): AiProviderKeys => ({
+  moonshot: '',
+  google: '',
+  qwen: '',
+  openai: '',
+  anthropic: '',
+  xai: '',
+})
 
 export const createAiProviderKeys = (
   environment: AiProviderEnvironment,
@@ -45,6 +58,102 @@ export const getAiProviderAvailability = (
   xai: keys.xai.length > 0,
 })
 
+export const mergeAiProviderKeys = (
+  environmentKeys: AiProviderKeys,
+  storedKeys: AiProviderKeys,
+): AiProviderKeys => {
+  const merged = createEmptyAiProviderKeys()
+  for (const providerId of PROVIDER_IDS) {
+    merged[providerId] = storedKeys[providerId] || environmentKeys[providerId]
+  }
+  return merged
+}
+
+export const parseStoredAiProviderKeys = (raw: string | null): AiProviderKeys => {
+  const keys = createEmptyAiProviderKeys()
+  if (!raw) return keys
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    return keys
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return keys
+
+  const record = parsed as Record<string, unknown>
+  for (const providerId of PROVIDER_IDS) {
+    keys[providerId] = readKey(record[providerId])
+  }
+  return keys
+}
+
+export const serializeStoredAiProviderKeys = (keys: AiProviderKeys): string => {
+  const payload: Partial<Record<AiProviderId, string>> = {}
+  for (const providerId of PROVIDER_IDS) {
+    const value = readKey(keys[providerId])
+    if (value) payload[providerId] = value
+  }
+  return JSON.stringify(payload)
+}
+
+type KeyStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
+
+const getBrowserStorage = (): KeyStorage | null => {
+  try {
+    if (typeof localStorage === 'undefined') return null
+    return localStorage
+  } catch {
+    return null
+  }
+}
+
+export const readStoredAiProviderKeys = (
+  storage: KeyStorage | null = getBrowserStorage(),
+): AiProviderKeys => {
+  if (!storage) return createEmptyAiProviderKeys()
+  try {
+    return parseStoredAiProviderKeys(storage.getItem(AI_PROVIDER_KEYS_STORAGE_KEY))
+  } catch {
+    return createEmptyAiProviderKeys()
+  }
+}
+
+export const writeStoredAiProviderKeys = (
+  keys: AiProviderKeys,
+  storage: KeyStorage | null = getBrowserStorage(),
+): void => {
+  if (!storage) return
+  const normalized = createEmptyAiProviderKeys()
+  let hasAny = false
+  for (const providerId of PROVIDER_IDS) {
+    const value = readKey(keys[providerId])
+    normalized[providerId] = value
+    if (value) hasAny = true
+  }
+
+  try {
+    if (!hasAny) {
+      storage.removeItem(AI_PROVIDER_KEYS_STORAGE_KEY)
+      return
+    }
+    storage.setItem(AI_PROVIDER_KEYS_STORAGE_KEY, serializeStoredAiProviderKeys(normalized))
+  } catch {
+    // Quota or privacy mode — leave the previous value untouched.
+  }
+}
+
+export const getResolvedAiProviderKeys = (
+  storage: KeyStorage | null = getBrowserStorage(),
+): AiProviderKeys =>
+  mergeAiProviderKeys(ENVIRONMENT_AI_PROVIDER_KEYS, readStoredAiProviderKeys(storage))
+
+export const getResolvedAiProviderAvailability = (
+  storage: KeyStorage | null = getBrowserStorage(),
+): AiProviderAvailability =>
+  getAiProviderAvailability(getResolvedAiProviderKeys(storage))
+
 export const getInitialAiSelection = (
   availability: AiProviderAvailability,
 ): AiModelSelection => {
@@ -59,7 +168,7 @@ export const getInitialAiSelection = (
   }
 }
 
-export const AI_PROVIDER_KEYS = createAiProviderKeys({
+export const ENVIRONMENT_AI_PROVIDER_KEYS = createAiProviderKeys({
   VITE_MOONSHOT_API_KEY: import.meta.env.VITE_MOONSHOT_API_KEY,
   VITE_GOOGLE_GENERATIVE_AI_API_KEY: import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY,
   VITE_ALIBABA_API_KEY: import.meta.env.VITE_ALIBABA_API_KEY,
@@ -67,8 +176,9 @@ export const AI_PROVIDER_KEYS = createAiProviderKeys({
   VITE_ANTHROPIC_API_KEY: import.meta.env.VITE_ANTHROPIC_API_KEY,
   VITE_XAI_API_KEY: import.meta.env.VITE_XAI_API_KEY,
 })
-export const AI_PROVIDER_AVAILABILITY = getAiProviderAvailability(AI_PROVIDER_KEYS)
+
+export const AI_PROVIDER_AVAILABILITY = getResolvedAiProviderAvailability()
 export const INITIAL_AI_SELECTION = getInitialAiSelection(AI_PROVIDER_AVAILABILITY)
 
 export const getAiProviderKey = (providerId: AiProviderId): string =>
-  AI_PROVIDER_KEYS[providerId]
+  getResolvedAiProviderKeys()[providerId]

@@ -15,8 +15,14 @@ vi.mock('./ui/select', () => ({
   SelectValue: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }))
 
+vi.mock('./ui/button', () => ({
+  Button: ({ children, ...props }: ComponentProps<'button'>) => (
+    <button {...props}>{children}</button>
+  ),
+}))
+
 describe('AI provider controls', () => {
-  it('shows the required environment variable when the selected provider has no key', () => {
+  it('shows a missing-key warning with a button to open the keys dialog', () => {
     const markup = renderToStaticMarkup(
       <AiProviderControls
         selection={{ provider: 'openai', model: 'gpt-5.6-terra' }}
@@ -30,13 +36,16 @@ describe('AI provider controls', () => {
         }}
         onModelSelect={() => undefined}
         onReasoningEffortChange={() => undefined}
+        onManageKeys={() => undefined}
       />,
     )
 
     expect(markup).toContain('API key missing.')
-    expect(markup).toContain('OPENAI_API_KEY')
-    expect(markup).toContain('.env.local')
+    expect(markup).toContain('Add your OpenAI key')
+    expect(markup).toContain('Enter API key')
     expect(markup).toContain('OpenAI · key missing')
+    expect(markup).toContain('API keys')
+    expect(markup).not.toContain('.env.local')
   })
 
   it('does not show a missing-key warning for a configured provider', () => {
@@ -53,11 +62,13 @@ describe('AI provider controls', () => {
         }}
         onModelSelect={() => undefined}
         onReasoningEffortChange={() => undefined}
+        onManageKeys={() => undefined}
       />,
     )
 
     expect(markup).not.toContain('API key missing.')
     expect(markup).toContain('Google · Gemini 3.6 Flash')
+    expect(markup).toContain('API keys')
   })
 
   it('shows model-specific reasoning effort chips and omits them for Moonshot', () => {
@@ -78,6 +89,7 @@ describe('AI provider controls', () => {
         }}
         onModelSelect={() => undefined}
         onReasoningEffortChange={() => undefined}
+        onManageKeys={() => undefined}
       />,
     )
 
@@ -107,6 +119,7 @@ describe('AI provider controls', () => {
         }}
         onModelSelect={() => undefined}
         onReasoningEffortChange={() => undefined}
+        onManageKeys={() => undefined}
       />,
     )
 
