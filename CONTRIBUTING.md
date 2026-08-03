@@ -1,4 +1,4 @@
-# Contributing to Frameflow
+# Contributing to Shotluma
 
 Thank you for helping make App Store screenshot design more accessible. Contributions of all sizes are welcome, including bug reports, documentation, translations, design feedback, mockups, and code.
 
@@ -6,7 +6,7 @@ By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Just start
 
-Frameflow is early, and it improves fastest when people fix what annoys them. If you hit a bug, fix it. If something is missing and you think others would want it too, add it. You do not need to ask first, and you do not need an issue — a pull request is a perfectly good way to open the conversation.
+Shotluma is early, and it improves fastest when people fix what annoys them. If you hit a bug, fix it. If something is missing and you think others would want it too, add it. You do not need to ask first, and you do not need an issue — a pull request is a perfectly good way to open the conversation.
 
 If you would rather pick up something already scoped, the `good first issue` and `help wanted` labels are a good place to look.
 
@@ -21,7 +21,7 @@ AI-assisted contributions are welcome. The contributor remains responsible for u
 
 ## Development setup
 
-Frameflow uses Bun for package and script operations.
+Shotluma uses Bun for package and script operations.
 
 1. Fork the repository and clone your fork.
 2. Create a focused branch from `main`:

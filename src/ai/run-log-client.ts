@@ -8,7 +8,7 @@ import {
 type SaveAiRunOptions = Omit<CreateAiRunLogOptions, 'id'>
 
 export const saveAiRunReport = async (options: SaveAiRunOptions): Promise<void> => {
-  if (!__FRAMEFLOW_AI_LOGGING__) return
+  if (!__SHOTLUMA_AI_LOGGING__) return
 
   const log = createAiRunLog({
     ...options,

@@ -37,7 +37,7 @@ Example:
 }
 ```
 
-Frameflow calculates a projective `matrix3d` from these points. Uploaded screenshots are therefore distorted into the original Photoshop perspective instead of merely being rotated.
+Shotluma calculates a projective `matrix3d` from these points. Uploaded screenshots are therefore distorted into the original Photoshop perspective instead of merely being rotated.
 
 ## What does not work
 

@@ -1,6 +1,6 @@
 # Governance
 
-Frameflow uses a lightweight, maintainer-led governance model while the community is small. The goal is to make decisions transparently and expand responsibility as contributors build trust.
+Shotluma uses a lightweight, maintainer-led governance model while the community is small. The goal is to make decisions transparently and expand responsibility as contributors build trust.
 
 ## Roles
 

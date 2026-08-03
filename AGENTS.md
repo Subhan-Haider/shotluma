@@ -1,6 +1,6 @@
-# Frameflow agent instructions
+# Shotluma agent instructions
 
-Frameflow is a React 19, TypeScript, and Vite editor. Treat maintainability, user data, export accuracy, and secret handling as product behavior.
+Shotluma is a React 19, TypeScript, and Vite editor. Treat maintainability, user data, export accuracy, and secret handling as product behavior.
 
 ## Required workflow
 

@@ -1,3 +1,4 @@
+import { APP_LOGO_URL, APP_NAME } from '../brand'
 import {
   AlertCircle,
   Check,
@@ -220,11 +221,13 @@ export function AppHeader({
   return (
     <header className="app-header">
       <div className="topbar">
-        <div className="brand-lockup">
-          <div className="brand-symbol"><span>F</span><i /></div>
-          <strong>Frameflow</strong>
+        <a className="brand-lockup" href="https://shotluma.com" title="Open the Shotluma homepage">
+          <span className="brand-symbol" aria-hidden="true">
+            <img src={APP_LOGO_URL} alt="" width="30" height="30" />
+          </span>
+          <strong>{APP_NAME}</strong>
           <em>STUDIO</em>
-        </div>
+        </a>
         <div className="project-meta">
           <span
             className={`save-state save-state--${saveStatus}`}

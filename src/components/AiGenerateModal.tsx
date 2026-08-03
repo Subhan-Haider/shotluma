@@ -172,7 +172,7 @@ const IdleContent = ({
             type="text"
             value={appName}
             onChange={(event) => onAppNameChange(event.target.value)}
-            placeholder="e.g. Frameflow"
+            placeholder="e.g. Shotluma"
             autoComplete="off"
           />
         </div>

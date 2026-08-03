@@ -1,6 +1,6 @@
 # Support
 
-Frameflow is maintained by the community on a best-effort basis.
+Shotluma is maintained by the community on a best-effort basis.
 
 ## Get help
 

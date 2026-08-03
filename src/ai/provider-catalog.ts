@@ -89,7 +89,7 @@ export const AI_PROVIDERS: readonly AiProviderOption[] = [
       {
         id: 'kimi-k3',
         label: 'Kimi K3',
-        description: 'Existing Frameflow model · local CORS proxy required',
+        description: 'Existing Shotluma model · local CORS proxy required',
         reasoningEfforts: MOONSHOT_REASONING_EFFORTS,
       },
     ],

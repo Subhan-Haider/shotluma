@@ -97,7 +97,7 @@ const limitText = (value: string) => {
     return { text: value, isTruncated: false }
   }
   return {
-    text: `${value.slice(0, AI_RUN_LOG_TEXT_LIMIT)}\n… [truncated by Frameflow]`,
+    text: `${value.slice(0, AI_RUN_LOG_TEXT_LIMIT)}\n… [truncated by Shotluma]`,
     isTruncated: true,
   }
 }

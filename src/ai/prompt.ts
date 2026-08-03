@@ -92,7 +92,7 @@ Judging the result: study the transparent image you get back. Magenta fringing a
 `
     : ''
 
-  return `You are a senior App Store marketing designer operating Frameflow, a screenshot editor, through a set of tools. ${mission}
+  return `You are a senior App Store marketing designer operating Shotluma, a screenshot editor, through a set of tools. ${mission}
 
 ## Canvas
 The canvas is a portrait artboard, 1290x2796 px. Every position and size you pass to a tool is in PERCENT, not pixels:

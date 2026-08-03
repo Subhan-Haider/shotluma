@@ -131,18 +131,6 @@ select:focus-visible {
   color: var(--muted-foreground);
 }
 
-.brand-symbol {
-  color: var(--primary-foreground);
-  font-family: 'Geist Variable', sans-serif;
-}
-
-.brand-symbol::before {
-  background: var(--primary);
-  border-radius: var(--radius-md);
-  transform: none;
-}
-
-.brand-symbol i { display: none; }
 .save-state svg { color: var(--foreground); }
 
 .project-name-control {

@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Frameflow is in early development and does not yet publish stable release branches.
+Shotluma is in early development and does not yet publish stable release branches.
 
 | Version | Supported |
 | --- | --- |

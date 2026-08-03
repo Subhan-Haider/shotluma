@@ -120,7 +120,7 @@ describe('AI run logs', () => {
     expect(log.slidesCreated).toBe(0)
     expect(log.reasoningEffort).toBe('high')
     expect(log.assistantOutputTruncated).toBe(true)
-    expect(log.assistantOutput).toContain('[truncated by Frameflow]')
+    expect(log.assistantOutput).toContain('[truncated by Shotluma]')
     expect(log.reasoningOutputTruncated).toBe(false)
   })
 

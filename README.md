@@ -1,4 +1,6 @@
-# Frameflow
+# Shotluma
+
+<img src="public/brand/shotluma-logo.webp" alt="Shotluma logo" width="120" />
 
 An AI-first, local-first canvas editor for creating complete iOS App Store screenshot sets in the browser. The AI agent builds real, editable designs instead of flattening your ideas into generated images.
 
@@ -9,7 +11,7 @@ An AI-first, local-first canvas editor for creating complete iOS App Store scree
 
 Describe your app, upload raw screenshots, and an AI agent designs the full set — not as opaque bitmaps, but by driving the same editor operations you'd use by hand. Every text layer, gradient, shape, and device mockup it places stays a real canvas element: select it, restyle it, move it, or redo it manually. Then export every artboard at exact store resolutions.
 
-![Frameflow's AI agent generating a complete, editable App Store screenshot set](docs/assets/demos/frameflow-overview.gif)
+![Shotluma's AI agent generating a complete, editable App Store screenshot set](docs/assets/demos/shotluma-overview.gif)
 
 Projects live entirely in your browser — no account, no backend. The editor itself works without any API key; bring your own key only for AI generation.
 
@@ -27,7 +29,7 @@ Projects live entirely in your browser — no account, no backend. The editor it
 
 Select any artboard, describe the change, and let the AI agent revise just that screen. The result uses the same editor operations as the full-set generator and stays fully editable.
 
-![Frameflow revising a single App Store screenshot with the AI editing action](docs/assets/demos/ai-screen-edit.gif)
+![Shotluma revising a single App Store screenshot with the AI editing action](docs/assets/demos/ai-screen-edit.gif)
 
 ## Quick start
 
@@ -77,7 +79,7 @@ How it works, and what to know:
 - The `VITE_*` keys are embedded in client code by design — this setup is **localhost-only**. Never commit `.env.local` or deploy a keyed build (see [Self-hosting](#self-hosting)).
 - Prompts can be written in any language; generated canvas copy and summaries are in English.
 
-For debugging, set `FRAMEFLOW_AI_LOGGING=true` in `.env.local` to write one JSON file per run to the git-ignored `ai-logs/` directory. Logs record provider, model, timing, visible model output, tool activity, and token usage — never prompt text, screenshots, or API keys.
+For debugging, set `SHOTLUMA_AI_LOGGING=true` in `.env.local` to write one JSON file per run to the git-ignored `ai-logs/` directory. Logs record provider, model, timing, visible model output, tool activity, and token usage — never prompt text, screenshots, or API keys.
 
 ## Commands
 
@@ -104,7 +106,7 @@ Do not host an AI-enabled build: Vite embeds `VITE_*` values into the client bun
 
 ## Architecture
 
-Frameflow is a single-package React 19 + TypeScript + Vite + Tailwind CSS app.
+Shotluma is a single-package React 19 + TypeScript + Vite + Tailwind CSS app.
 
 ```text
 src/App.tsx              Application composition
@@ -134,4 +136,4 @@ Bug reports, design improvements, docs fixes, and new device mockups count just 
 
 MIT — see [LICENSE](LICENSE). Asset-specific terms are in [ASSET_LICENSES.md](ASSET_LICENSES.md). The `"private": true` flag in `package.json` only prevents accidental npm publication; it doesn't restrict the license.
 
-Apple, App Store, and iPhone are trademarks of Apple Inc. Frameflow is an independent project, not affiliated with or endorsed by Apple. You remain responsible for following platform and trademark guidelines when using device mockups.
+Apple, App Store, and iPhone are trademarks of Apple Inc. Shotluma is an independent project, not affiliated with or endorsed by Apple. You remain responsible for following platform and trademark guidelines when using device mockups.

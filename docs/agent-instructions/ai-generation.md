@@ -10,7 +10,7 @@ The browser uses the AI SDK's native Google, Alibaba/Qwen, OpenAI, Anthropic, an
 - Never return secrets or raw data URLs in model-visible state.
 - Keep uploads browser-local except for screenshots and app logos explicitly included in an AI run.
 - In generate mode, collect app name and app logo separately from the app description and screenshots. Pass the name and logo asset id through the user message, attach the logo image, and instruct the model to place the logo with `add_image` (never as a device screenshot).
-- Keep developer AI run logging gated by `FRAMEFLOW_AI_LOGGING` and write only
+- Keep developer AI run logging gated by `SHOTLUMA_AI_LOGGING` and write only
   through the local Vite middleware to the git-ignored `ai-logs/` directory.
   Persist only the versioned, bounded log schema: never add input prompt text,
   screenshot payloads or names, credentials, or raw provider metadata.

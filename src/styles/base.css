@@ -94,17 +94,10 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .brand-symbol {
   width: 30px;
   height: 30px;
-  position: relative;
-  display: grid;
-  place-items: center;
-  color: #181814;
-  font-family: 'Bricolage Grotesque Variable', sans-serif;
-  font-weight: 820;
-  font-size: 15px;
+  display: block;
+  flex: 0 0 auto;
 }
-.brand-symbol::before { content: ''; position: absolute; inset: 0; background: var(--acid); border-radius: 8px 8px 8px 2px; transform: rotate(-3deg); }
-.brand-symbol span { position: relative; z-index: 1; }
-.brand-symbol i { position: absolute; right: -3px; top: -3px; width: 9px; height: 9px; background: var(--accent); border: 2px solid #181814; border-radius: 50%; z-index: 2; }
+.brand-symbol img { display: block; width: 100%; height: 100%; object-fit: contain; }
 
 .project-meta { justify-self: center; display: flex; align-items: center; gap: 18px; }
 .save-state { display: flex; align-items: center; gap: 6px; font-size: 10px; color: #8f8f85; white-space: nowrap; }
@@ -754,7 +747,7 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 @media (max-width: 820px) {
   .app-header, .editor-shell, .toast { display: none; }
   .mobile-blocker { display: flex; position: fixed; inset: 0; padding: 40px; background: #1b1b17; color: #f7f4ec; flex-direction: column; align-items: flex-start; justify-content: flex-end; }
-  .mobile-blocker .brand-symbol { margin-bottom: auto; }
+  .mobile-blocker .brand-symbol { width: 44px; height: 44px; margin-bottom: auto; }
   .mobile-blocker h1 { font-family: 'Bricolage Grotesque Variable'; font-size: clamp(42px, 13vw, 72px); line-height: .9; letter-spacing: -3px; max-width: 520px; margin: 0; }
   .mobile-blocker p { color: #a6a69c; font-size: 14px; line-height: 1.5; max-width: 430px; margin: 20px 0 0; }
 }

@@ -52,7 +52,7 @@ afterEach(async () => {
 
 describe('AI run log Vite plugin', () => {
   it('writes a validated log to the project AI log directory', async () => {
-    temporaryRoot = await mkdtemp(path.join(tmpdir(), 'frameflow-ai-log-'))
+    temporaryRoot = await mkdtemp(path.join(tmpdir(), 'shotluma-ai-log-'))
     const log = createLog()
 
     const filePath = await writeAiRunLogFile(temporaryRoot, log)
@@ -71,7 +71,7 @@ describe('AI run log Vite plugin', () => {
   })
 
   it('rejects malformed browser payloads before writing', async () => {
-    temporaryRoot = await mkdtemp(path.join(tmpdir(), 'frameflow-ai-log-'))
+    temporaryRoot = await mkdtemp(path.join(tmpdir(), 'shotluma-ai-log-'))
 
     await expect(writeAiRunLogFile(temporaryRoot, {
       ...createLog(),

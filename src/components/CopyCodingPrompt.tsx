@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Check, Copy } from './icons'
 
-export const CODING_ASSISTANT_PROMPT = `I use Frameflow to generate App Store screenshots from a short written description of my app. Read this codebase and write that description for me.
+export const CODING_ASSISTANT_PROMPT = `I use Shotluma to generate App Store screenshots from a short written description of my app. Read this codebase and write that description for me.
 
 Return a single plain-prose paragraph (about 60-120 words, no markdown, no bullet lists, no headings) that I can paste straight into the generator. Cover:
 - What the app does and who it is for.

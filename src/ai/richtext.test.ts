@@ -3,9 +3,9 @@ import { buildHighlightHtml } from './richtext'
 
 describe('buildHighlightHtml', () => {
   it('returns undefined when no highlight matches', () => {
-    expect(buildHighlightHtml('Frameflow', [{ text: 'missing', bold: true }]))
+    expect(buildHighlightHtml('Shotluma', [{ text: 'missing', bold: true }]))
       .toBeUndefined()
-    expect(buildHighlightHtml('Frameflow', [{ text: '', bold: true }]))
+    expect(buildHighlightHtml('Shotluma', [{ text: '', bold: true }]))
       .toBeUndefined()
   })
 
@@ -43,11 +43,11 @@ describe('buildHighlightHtml', () => {
   })
 
   it('gives earlier highlight entries precedence over overlaps', () => {
-    const html = buildHighlightHtml('Frameflow', [
-      { text: 'Frame', bold: true },
-      { text: 'Frameflow', italic: true },
+    const html = buildHighlightHtml('Shotluma', [
+      { text: 'Shot', bold: true },
+      { text: 'Shotluma', italic: true },
     ])
 
-    expect(html).toBe('<b>Frame</b>flow')
+    expect(html).toBe('<b>Shot</b>luma')
   })
 })

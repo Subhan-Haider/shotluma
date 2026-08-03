@@ -146,7 +146,7 @@ export const createAiRunLogPlugin = ({
   const middleware = createAiRunLogMiddleware(projectRoot)
 
   return {
-    name: 'frameflow-ai-run-logs',
+    name: 'shotluma-ai-run-logs',
     apply: 'serve',
     configureServer(server) {
       if (isEnabled) server.middlewares.use(middleware)

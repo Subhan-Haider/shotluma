@@ -6,7 +6,8 @@ import { createAiRunLogPlugin } from './scripts/ai-run-log-plugin'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const isAiLoggingEnabled = env['FRAMEFLOW_AI_LOGGING']?.trim().toLowerCase() === 'true'
+  const aiLoggingValue = env['SHOTLUMA_AI_LOGGING'] ?? env['FRAMEFLOW_AI_LOGGING']
+  const isAiLoggingEnabled = aiLoggingValue?.trim().toLowerCase() === 'true'
   const publicMoonshotKey = env['VITE_MOONSHOT_API_KEY']?.trim() ?? ''
   const moonshotKey = publicMoonshotKey.length > 0
     ? publicMoonshotKey
@@ -21,7 +22,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      __FRAMEFLOW_AI_LOGGING__: JSON.stringify(isAiLoggingEnabled),
+      __SHOTLUMA_AI_LOGGING__: JSON.stringify(isAiLoggingEnabled),
       'import.meta.env.VITE_MOONSHOT_API_KEY': JSON.stringify(moonshotKey),
     },
     plugins: [

@@ -18,6 +18,6 @@ export const getExportZipDownloadName = (
   projectName: string,
   formatFilename: string,
 ) => {
-  const projectFilename = getSafeFilename(projectName.trim(), 'Frameflow')
+  const projectFilename = getSafeFilename(projectName.trim(), 'Shotluma')
   return `${projectFilename}-${formatFilename}-Screens.zip`
 }

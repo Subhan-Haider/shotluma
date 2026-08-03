@@ -1,5 +1,6 @@
 import type { Slide, UploadAsset } from './types'
 
+// Keep the established IndexedDB name so rebranding never strands local projects.
 const DATABASE_NAME = 'frameflow'
 const DATABASE_VERSION = 2
 const PROJECT_STORE = 'projects'

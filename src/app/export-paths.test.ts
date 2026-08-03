@@ -8,11 +8,11 @@ import {
 
 describe('getSafeFilename', () => {
   it('sanitizes unsafe characters', () => {
-    expect(getSafeFilename('My Project! / v2', 'Frameflow')).toBe('My-Project-v2')
+    expect(getSafeFilename('My Project! / v2', 'Shotluma')).toBe('My-Project-v2')
   })
 
   it('falls back when the name is empty after sanitizing', () => {
-    expect(getSafeFilename('!!!', 'Frameflow')).toBe('Frameflow')
+    expect(getSafeFilename('!!!', 'Shotluma')).toBe('Shotluma')
   })
 })
 
@@ -39,6 +39,6 @@ describe('getExportZipDownloadName', () => {
     expect(getExportZipDownloadName('Launch Kit', '6.9-inch'))
       .toBe('Launch-Kit-6.9-inch-Screens.zip')
     expect(getExportZipDownloadName('  ', 'all-sizes'))
-      .toBe('Frameflow-all-sizes-Screens.zip')
+      .toBe('Shotluma-all-sizes-Screens.zip')
   })
 })

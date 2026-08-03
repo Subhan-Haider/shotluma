@@ -1,10 +1,10 @@
-# Frameflow architecture
+# Shotluma architecture
 
-This document explains the boundaries that matter when changing Frameflow. It complements the contributor guide; the source code remains the final authority.
+This document explains the boundaries that matter when changing Shotluma. It complements the contributor guide; the source code remains the final authority.
 
 ## Runtime overview
 
-Frameflow is a client-side React application served by Vite.
+Shotluma is a client-side React application served by Vite.
 
 ```text
 Browser
@@ -71,7 +71,7 @@ Persistence is browser-local:
 
 Avoid putting credentials or provider responses into persisted project data.
 
-Developer AI run logging is enabled only when `FRAMEFLOW_AI_LOGGING=true`. The browser sends a versioned, bounded record to the local Vite middleware, which validates it and writes one JSON file per run to the git-ignored `ai-logs/` directory in the repository. Records include normalized token usage, visible text and reasoning output, tool activity, and coarse request sizes. Frameflow does not add input prompt text, screenshot payloads or names, credentials, or raw provider metadata to the records.
+Developer AI run logging is enabled only when `SHOTLUMA_AI_LOGGING=true`. The browser sends a versioned, bounded record to the local Vite middleware, which validates it and writes one JSON file per run to the git-ignored `ai-logs/` directory in the repository. Records include normalized token usage, visible text and reasoning output, tool activity, and coarse request sizes. Shotluma does not add input prompt text, screenshot payloads or names, credentials, or raw provider metadata to the records.
 
 ## Export
 
