@@ -4,7 +4,8 @@
 
 An AI-first, local-first canvas editor for creating complete iOS App Store screenshot sets in the browser. The AI agent builds real, editable designs instead of flattening your ideas into generated images.
 
-**[Visit the website](https://shotluma.com) · [Open the editor](https://app.shotluma.com)**
+[![Open the editor](https://img.shields.io/badge/%E2%96%B6%EF%B8%8E%20Open%20the%20editor-app.shotluma.com-2563eb?style=for-the-badge)](https://app.shotluma.com)
+[![Visit the website](https://img.shields.io/badge/Visit%20the%20website-shotluma.com-0f172a?style=for-the-badge)](https://shotluma.com)
 
 [![CI](https://github.com/realZachi/shotluma/actions/workflows/ci.yml/badge.svg)](https://github.com/realZachi/shotluma/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/realZachi/shotluma?display_name=tag&sort=semver)](https://github.com/realZachi/shotluma/releases)
