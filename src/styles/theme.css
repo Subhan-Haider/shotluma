@@ -747,16 +747,28 @@ select:focus-visible {
 }
 
 .ai-modal-logo-slot {
-  background: var(--muted);
-  border-color: var(--border);
   border-radius: var(--radius-md);
-  box-shadow: 0 0 0 1px var(--border);
 }
 
 .ai-modal-thumb { border-radius: var(--radius-md); box-shadow: 0 0 0 1px var(--border); }
 .ai-modal-result p { color: var(--foreground); }
 .ai-modal-result--error p { color: var(--destructive); }
 .ai-modal-footer { background: var(--muted); }
+
+.ai-modal-generate {
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.ai-modal-generate:hover {
+  color: var(--primary-foreground);
+  background: color-mix(in oklch, var(--primary) 88%, var(--background));
+}
+
+.ai-modal-generate:disabled {
+  color: var(--primary-foreground);
+}
 
 .ai-modal-btn-secondary {
   border-color: var(--border);

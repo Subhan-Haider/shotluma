@@ -786,11 +786,6 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   flex: 0 0 auto;
   width: 52px;
   height: 52px;
-  display: grid;
-  place-items: center;
-  padding: 4px;
-  border: 1px solid #dddcd5;
-  background: #f7f6f1;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -799,7 +794,6 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 8px;
 }
 .ai-modal-logo-slot__remove {
   position: absolute;

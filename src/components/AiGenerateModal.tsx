@@ -410,7 +410,7 @@ const ModalFooter = ({
         />
         <Button
           type="button"
-          className="ai-modal-generate"
+          className="export-button ai-modal-generate"
           onClick={onGenerate}
           disabled={!canGenerate}
         >
@@ -429,7 +429,7 @@ const ModalFooter = ({
   }
   if (phase === 'done') {
     return (
-      <Button type="button" className="ai-modal-generate" onClick={onClose}>
+      <Button type="button" className="export-button ai-modal-generate" onClick={onClose}>
         <b>Close</b>
       </Button>
     )
