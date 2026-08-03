@@ -15,6 +15,24 @@ vi.mock('./ui/select', () => ({
   SelectValue: ({ children }: { children: ReactNode }) => <span>{children}</span>,
 }))
 
+vi.mock('./ui/popover', () => ({
+  Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PopoverTrigger: ({
+    children,
+    render,
+    ...props
+  }: {
+    children?: ReactNode
+    render?: ReactNode
+  } & ComponentProps<'button'>) => (
+    <button {...props}>
+      {render}
+      {children}
+    </button>
+  ),
+  PopoverContent: ({ children, ...props }: ComponentProps<'div'>) => <div {...props}>{children}</div>,
+}))
+
 const availableTransports = {
   moonshot: true,
   google: true,
@@ -31,6 +49,35 @@ vi.mock('./ui/button', () => ({
 }))
 
 describe('AI provider controls', () => {
+  it('shows a compact trigger with model, effort, and status', () => {
+    const markup = renderToStaticMarkup(
+      <AiProviderControls
+        selection={{
+          provider: 'google',
+          model: 'gemini-3.6-flash',
+          reasoningEffort: 'high',
+        }}
+        availability={{
+          moonshot: false,
+          google: true,
+          qwen: false,
+          openai: false,
+          anthropic: false,
+          xai: false,
+        }}
+        transportAvailability={availableTransports}
+        onModelSelect={() => undefined}
+        onReasoningEffortChange={() => undefined}
+        onManageKeys={() => undefined}
+      />,
+    )
+
+    expect(markup).toContain('Gemini 3.6 Flash · High')
+    expect(markup).toContain('ai-model-picker-status is-ready')
+    expect(markup).toContain('Google · Gemini 3.6 Flash')
+    expect(markup).toContain('API keys')
+  })
+
   it('shows a missing-key warning with a button to open the keys dialog', () => {
     const markup = renderToStaticMarkup(
       <AiProviderControls
@@ -55,34 +102,11 @@ describe('AI provider controls', () => {
     expect(markup).toContain('Enter API key')
     expect(markup).toContain('OpenAI · key missing')
     expect(markup).toContain('API keys')
+    expect(markup).toContain('ai-model-picker-status is-missing')
     expect(markup).not.toContain('.env.local')
   })
 
-  it('does not show a missing-key warning for a configured provider', () => {
-    const markup = renderToStaticMarkup(
-      <AiProviderControls
-        selection={{ provider: 'google', model: 'gemini-3.6-flash' }}
-        availability={{
-          moonshot: false,
-          google: true,
-          qwen: false,
-          openai: false,
-          anthropic: false,
-          xai: false,
-        }}
-        transportAvailability={availableTransports}
-        onModelSelect={() => undefined}
-        onReasoningEffortChange={() => undefined}
-        onManageKeys={() => undefined}
-      />,
-    )
-
-    expect(markup).not.toContain('API key missing.')
-    expect(markup).toContain('Google · Gemini 3.6 Flash')
-    expect(markup).toContain('API keys')
-  })
-
-  it('shows model-specific reasoning effort chips and omits them for Moonshot', () => {
+  it('shows model-specific reasoning effort chips and omits them for models without effort', () => {
     const openAiMarkup = renderToStaticMarkup(
       <AiProviderControls
         selection={{
@@ -142,6 +166,7 @@ describe('AI provider controls', () => {
     expect(moonshotMarkup).toContain('Max')
     expect(moonshotMarkup).not.toContain('Medium')
     expect(moonshotMarkup).not.toContain('Provider default')
+    expect(moonshotMarkup).toContain('Kimi K3 · High')
     expect(moonshotMarkup).toContain('Moonshot · Kimi K3')
   })
 

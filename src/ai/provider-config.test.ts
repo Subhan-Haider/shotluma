@@ -77,7 +77,7 @@ describe('AI provider configuration', () => {
     })
   })
 
-  it('starts with the first configured provider and otherwise falls back to Google', () => {
+  it('starts with the first configured provider and otherwise falls back to Moonshot', () => {
     expect(getInitialAiSelection({
       moonshot: false,
       google: false,
@@ -98,8 +98,8 @@ describe('AI provider configuration', () => {
       anthropic: false,
       xai: false,
     })).toEqual({
-      provider: 'google',
-      model: 'gemini-3.6-flash',
+      provider: 'moonshot',
+      model: 'kimi-k3',
       reasoningEffort: 'high',
     })
     expect(getInitialAiSelection({

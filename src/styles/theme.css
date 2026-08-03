@@ -152,7 +152,8 @@ select:focus-visible {
 
 .isolate.z-50:has(> [data-slot='select-content']),
 .isolate.z-50:has(> [data-slot='popover-content']) { z-index: 300; }
-.isolate.z-50:has(> .ai-modal-select-content) { z-index: 650; }
+.isolate.z-50:has(> .ai-model-picker-popover) { z-index: 650; }
+.isolate.z-50:has(> .ai-modal-select-content) { z-index: 660; }
 .isolate.z-50:has(> .project-menu-content),
 .isolate.z-50:has(> .export-menu-content) { z-index: 700; }
 .project-menu-content { padding: 5px; }
@@ -713,7 +714,7 @@ select:focus-visible {
 .ai-modal-hint,
 .ai-modal-assistant-text { color: var(--muted-foreground); }
 
-.ai-modal-toggle {
+.ai-modal-overlay-toggle {
   border-color: var(--input);
   border-radius: var(--radius-md);
   background: var(--background);
@@ -721,10 +722,9 @@ select:focus-visible {
   box-shadow: 0 1px 2px oklch(0 0 0 / 3%);
 }
 
-.ai-modal-toggle:hover:not(:disabled) { background: var(--accent); }
-.ai-modal-toggle__track { background: var(--border); }
-.ai-modal-toggle.is-active .ai-modal-toggle__track { background: var(--foreground); }
-.ai-modal-toggle__copy span { color: var(--muted-foreground); }
+.ai-modal-overlay-toggle__copy span,
+.ai-modal-overlay-toggle__copy small,
+.ai-modal-copy-prompt { color: var(--muted-foreground); }
 
 .ai-provider-description { color: var(--muted-foreground); }
 

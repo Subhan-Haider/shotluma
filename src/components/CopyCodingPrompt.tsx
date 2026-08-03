@@ -34,8 +34,8 @@ export const CopyCodingPromptButton = () => {
       className="ai-modal-copy-prompt"
       onClick={() => void handleCopy()}
     >
-      {copied ? <Check size={13} /> : <Copy size={13} />}
-      <span>{copied ? 'Prompt copied to clipboard' : 'Copy a prompt for your coding AI'}</span>
+      {copied ? <Check size={12} /> : <Copy size={12} />}
+      <span>{copied ? 'Prompt copied' : 'Copy prompt for your coding AI'}</span>
     </button>
   )
 }

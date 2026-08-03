@@ -221,8 +221,8 @@ export const AI_PROVIDERS: readonly AiProviderOption[] = [
 ]
 
 export const DEFAULT_AI_SELECTION: AiModelSelection = {
-  provider: 'google',
-  model: 'gemini-3.6-flash',
+  provider: 'moonshot',
+  model: 'kimi-k3',
   reasoningEffort: DEFAULT_AI_REASONING_EFFORT,
 }
 

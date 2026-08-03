@@ -24,7 +24,11 @@ import { shouldCloseAiModalOnKeydown } from './ai-modal-keyboard'
 import { AiApiKeysDialog } from './AiApiKeysDialog'
 import { AiProviderControls } from './AiProviderControls'
 import { CopyCodingPromptButton } from './CopyCodingPrompt'
-import { StartUp02, Upload, X } from './icons'
+import { Plus, StartUp02, Upload, X } from './icons'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Switch } from './ui/switch'
+import { Textarea } from './ui/textarea'
 import type { AiEditorController } from '../ai/controller'
 
 type ImageDraft = { id: string; file: File; name: string; dataUrl: string }
@@ -53,6 +57,7 @@ type ImageDropzoneProps = {
   label: string
   inputRef: RefObject<HTMLInputElement | null>
   onFiles: (files: File[]) => void
+  variant?: 'banner' | 'logo' | 'add'
 }
 
 type LogoPreviewProps = {
@@ -60,7 +65,12 @@ type LogoPreviewProps = {
   onRemove: () => void
 }
 
-const ImageDropzone = ({ label, inputRef, onFiles }: ImageDropzoneProps) => {
+const ImageDropzone = ({
+  label,
+  inputRef,
+  onFiles,
+  variant = 'banner',
+}: ImageDropzoneProps) => {
   const [isDragging, setIsDragging] = useState(false)
   const dragDepthRef = useRef(0)
 
@@ -102,15 +112,16 @@ const ImageDropzone = ({ label, inputRef, onFiles }: ImageDropzoneProps) => {
   return (
     <button
       type="button"
-      className={`ai-modal-dropzone${isDragging ? ' ai-modal-dropzone--active' : ''}`}
+      className={`ai-modal-dropzone ai-modal-dropzone--${variant}${isDragging ? ' ai-modal-dropzone--active' : ''}`}
       onClick={() => inputRef.current?.click()}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
+      aria-label={label}
     >
-      <Upload size={16} />
-      <span>{label}</span>
+      {variant === 'add' ? <Plus size={16} /> : <Upload size={16} />}
+      {variant === 'banner' && <span>{label}</span>}
     </button>
   )
 }
@@ -168,10 +179,31 @@ const IdleContent = ({
 }: IdleContentProps) => (
   <>
     {!isEditMode && (
-      <>
-        <div className="ai-modal-field">
+      <div className="ai-modal-app-row">
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          hidden
+          onChange={(event) => {
+            const files = event.target.files
+            if (files?.length) onLogoFiles(Array.from(files))
+            event.target.value = ''
+          }}
+        />
+        {logo
+          ? <LogoPreview logo={logo} onRemove={onRemoveLogo} />
+          : (
+              <ImageDropzone
+                label="Upload app logo"
+                inputRef={logoInputRef}
+                onFiles={onLogoFiles}
+                variant="logo"
+              />
+            )}
+        <div className="ai-modal-field ai-modal-field--grow">
           <label htmlFor="ai-modal-app-name">App name</label>
-          <input
+          <Input
             id="ai-modal-app-name"
             type="text"
             value={appName}
@@ -180,55 +212,24 @@ const IdleContent = ({
             autoComplete="off"
           />
         </div>
-        <div className="ai-modal-field">
-          <label>App logo</label>
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            hidden
-            onChange={(event) => {
-              const files = event.target.files
-              if (files?.length) onLogoFiles(Array.from(files))
-              event.target.value = ''
-            }}
-          />
-          {logo
-            ? <LogoPreview logo={logo} onRemove={onRemoveLogo} />
-            : (
-                <ImageDropzone
-                  label="Drop or upload app logo"
-                  inputRef={logoInputRef}
-                  onFiles={onLogoFiles}
-                />
-              )}
-          <small className="ai-modal-hint">
-            The AI will place this logo on the generated screens (not inside device frames).
-          </small>
-        </div>
-      </>
+      </div>
     )}
     <div className="ai-modal-field">
-      <label htmlFor="ai-modal-description">
-        {isEditMode ? 'What would you like to change?' : 'What is your app about?'}
-      </label>
-      <textarea
+      <div className="ai-modal-field__header">
+        <label htmlFor="ai-modal-description">
+          {isEditMode ? 'What would you like to change?' : 'What is your app about?'}
+        </label>
+        {!isEditMode && <CopyCodingPromptButton />}
+      </div>
+      <Textarea
         id="ai-modal-description"
         rows={4}
         value={description}
         onChange={(event) => onDescriptionChange(event.target.value)}
         placeholder={isEditMode
           ? 'For example: shorten the headline, make the device larger, and increase contrast …'
-          : 'Describe your app: audience, core features, tone …'}
+          : 'Audience, core features, tone …'}
       />
-      {!isEditMode && (
-        <div className="ai-modal-prompt-helper">
-          <CopyCodingPromptButton />
-          <small className="ai-modal-hint">
-            Not sure what to write? Paste this prompt into your coding assistant (Cursor, Claude Code, Copilot …) and it will draft a description from your codebase.
-          </small>
-        </div>
-      )}
     </div>
     <div className="ai-modal-field">
       <label>{isEditMode ? 'Screenshots (optional)' : 'Screenshots'}</label>
@@ -244,59 +245,60 @@ const IdleContent = ({
           event.target.value = ''
         }}
       />
-      <ImageDropzone
-        label={isEditMode ? 'Drop or add screenshot' : 'Drop or choose screenshots'}
-        inputRef={fileInputRef}
-        onFiles={onScreenshotFiles}
-      />
+      {screenshots.length === 0
+        ? (
+            <ImageDropzone
+              label={isEditMode ? 'Drop or add screenshot' : 'Drop or choose screenshots'}
+              inputRef={fileInputRef}
+              onFiles={onScreenshotFiles}
+            />
+          )
+        : (
+            <div className="ai-modal-thumbs">
+              {screenshots.map((shot) => (
+                <div className="ai-modal-thumb" key={shot.id}>
+                  <img src={shot.dataUrl} alt={shot.name} />
+                  <button
+                    type="button"
+                    onClick={() => onRemoveScreenshot(shot.id)}
+                    aria-label={`Remove ${shot.name}`}
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              ))}
+              <ImageDropzone
+                label="Add screenshot"
+                inputRef={fileInputRef}
+                onFiles={onScreenshotFiles}
+                variant="add"
+              />
+            </div>
+          )}
       {isEditMode && (
         <small className="ai-modal-hint">
           Only needed if you want to use a new image or app screenshot.
         </small>
       )}
-      {screenshots.length > 0 && (
-        <div className="ai-modal-thumbs">
-          {screenshots.map((shot) => (
-            <div className="ai-modal-thumb" key={shot.id}>
-              <img src={shot.dataUrl} alt={shot.name} />
-              <button
-                type="button"
-                onClick={() => onRemoveScreenshot(shot.id)}
-                aria-label={`Remove ${shot.name}`}
-              >
-                <X size={11} />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
-    <div className="ai-modal-field">
-      <label htmlFor="ai-modal-overlay-assets">AI overlay assets</label>
-      <button
+    <div className="ai-modal-overlay-toggle">
+      <Switch
         id="ai-modal-overlay-assets"
-        type="button"
-        role="switch"
-        aria-checked={enableOverlayAssets}
-        className={`ai-modal-toggle${enableOverlayAssets ? ' is-active' : ''}`}
+        checked={enableOverlayAssets}
         disabled={!overlayAssetsAvailable}
-        onClick={() => onEnableOverlayAssetsChange(!enableOverlayAssets)}
-      >
-        <span className="ai-modal-toggle__track" aria-hidden="true">
-          <span className="ai-modal-toggle__thumb" />
+        onCheckedChange={onEnableOverlayAssetsChange}
+      />
+      <label htmlFor="ai-modal-overlay-assets" className="ai-modal-overlay-toggle__copy">
+        <b>Decorative graphics</b>
+        <span>
+          Adds 1–2 cutout elements on top of your screens — badges, stickers, snippets of your UI. Never device frames or mockups.
         </span>
-        <span className="ai-modal-toggle__copy">
-          <b>{enableOverlayAssets ? 'On' : 'Off'}</b>
-          <span>
-            The AI generates cutout graphics with OpenAI gpt-image-2 (badges, stickers, extracted UI) and removes the chroma-key background in-browser.
-          </span>
-        </span>
-      </button>
-      <small className="ai-modal-hint">
-        {overlayAssetsAvailable
-          ? 'On: expect 1–2 generated graphics, billed to your OpenAI key. Overlay elements only — never mockups or device frames.'
-          : 'Requires an OpenAI API key (separate from the chat model above). Enter it via API keys.'}
-      </small>
+        <small>
+          {overlayAssetsAvailable
+            ? 'Uses your OpenAI key'
+            : 'Requires an OpenAI API key. Enter it via API keys.'}
+        </small>
+      </label>
     </div>
   </>
 )
@@ -370,6 +372,12 @@ const ModalFooter = ({
   phase,
   isEditMode,
   canGenerate,
+  selection,
+  availability,
+  transportAvailability,
+  onModelSelect,
+  onReasoningEffortChange,
+  onManageKeys,
   onGenerate,
   onCancel,
   onClose,
@@ -378,6 +386,12 @@ const ModalFooter = ({
   phase: RunPhase
   isEditMode: boolean
   canGenerate: boolean
+  selection: AiModelSelection
+  availability: AiProviderAvailability
+  transportAvailability: AiProviderAvailability
+  onModelSelect: (provider: AiProviderId, modelId: string) => void
+  onReasoningEffortChange: (reasoningEffort: NonNullable<AiModelSelection['reasoningEffort']>) => void
+  onManageKeys: (providerId: AiProviderId) => void
   onGenerate: () => void
   onCancel: () => void
   onClose: () => void
@@ -385,18 +399,46 @@ const ModalFooter = ({
 }) => {
   if (phase === 'idle') {
     return (
-      <button className="export-button ai-modal-generate" onClick={onGenerate} disabled={!canGenerate}>
-        <StartUp02 size={16} /><b>{isEditMode ? 'Edit' : 'Generate'}</b>
-      </button>
+      <>
+        <AiProviderControls
+          selection={selection}
+          availability={availability}
+          transportAvailability={transportAvailability}
+          onModelSelect={onModelSelect}
+          onReasoningEffortChange={onReasoningEffortChange}
+          onManageKeys={onManageKeys}
+        />
+        <Button
+          type="button"
+          className="ai-modal-generate"
+          onClick={onGenerate}
+          disabled={!canGenerate}
+        >
+          <StartUp02 size={16} data-icon="inline-start" />
+          <b>{isEditMode ? 'Edit' : 'Generate'}</b>
+        </Button>
+      </>
     )
   }
   if (phase === 'running') {
-    return <button className="ai-modal-btn-secondary" onClick={onCancel}>Cancel</button>
+    return (
+      <Button type="button" variant="outline" className="ai-modal-btn-secondary" onClick={onCancel}>
+        Cancel
+      </Button>
+    )
   }
   if (phase === 'done') {
-    return <button className="export-button ai-modal-generate" onClick={onClose}><b>Close</b></button>
+    return (
+      <Button type="button" className="ai-modal-generate" onClick={onClose}>
+        <b>Close</b>
+      </Button>
+    )
   }
-  return <button className="ai-modal-btn-secondary" onClick={onRetry}>Try again</button>
+  return (
+    <Button type="button" variant="outline" className="ai-modal-btn-secondary" onClick={onRetry}>
+      Try again
+    </Button>
+  )
 }
 
 export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrepareRun, onFinished, onActivity }: AiGenerateModalProps) => {
@@ -442,7 +484,9 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   useEffect(() => {
     if (!open || keysDialogOpen) return
     const handleKeydown = (event: KeyboardEvent) => {
-      const isNestedPopupOpen = Boolean(document.querySelector('[data-slot="select-content"]'))
+      const isNestedPopupOpen = Boolean(document.querySelector(
+        '[data-slot="select-content"], [data-slot="popover-content"]',
+      ))
       if (shouldCloseAiModalOnKeydown(event, isNestedPopupOpen)) requestClose()
     }
     window.addEventListener('keydown', handleKeydown, true)
@@ -584,40 +628,28 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
 
           <div className="ai-modal-body">
             {phase === 'idle' && (
-              <>
-                <AiProviderControls
-                  selection={selection}
-                  availability={availability}
-                  transportAvailability={transportAvailability}
-                  onModelSelect={handleModelSelect}
-                  onReasoningEffortChange={(reasoningEffort) => {
-                    setSelection((current) => ({ ...current, reasoningEffort }))
-                  }}
-                  onManageKeys={handleManageKeys}
-                />
-                <IdleContent
-                  isEditMode={isEditMode}
-                  appName={appName}
-                  description={description}
-                  logo={logo}
-                  screenshots={screenshots}
-                  enableOverlayAssets={enableOverlayAssets && availability.openai}
-                  overlayAssetsAvailable={availability.openai}
-                  logoInputRef={logoInputRef}
-                  fileInputRef={fileInputRef}
-                  onAppNameChange={setAppName}
-                  onDescriptionChange={setDescription}
-                  onLogoFiles={(files) => {
-                    void handleLogoFiles(files)
-                  }}
-                  onRemoveLogo={() => setLogo(null)}
-                  onScreenshotFiles={(files) => {
-                    void handleScreenshotFiles(files)
-                  }}
-                  onRemoveScreenshot={removeScreenshot}
-                  onEnableOverlayAssetsChange={setEnableOverlayAssets}
-                />
-              </>
+              <IdleContent
+                isEditMode={isEditMode}
+                appName={appName}
+                description={description}
+                logo={logo}
+                screenshots={screenshots}
+                enableOverlayAssets={enableOverlayAssets && availability.openai}
+                overlayAssetsAvailable={availability.openai}
+                logoInputRef={logoInputRef}
+                fileInputRef={fileInputRef}
+                onAppNameChange={setAppName}
+                onDescriptionChange={setDescription}
+                onLogoFiles={(files) => {
+                  void handleLogoFiles(files)
+                }}
+                onRemoveLogo={() => setLogo(null)}
+                onScreenshotFiles={(files) => {
+                  void handleScreenshotFiles(files)
+                }}
+                onRemoveScreenshot={removeScreenshot}
+                onEnableOverlayAssetsChange={setEnableOverlayAssets}
+              />
             )}
 
             {phase === 'running' && (
@@ -637,11 +669,19 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
             />
           </div>
 
-          <div className="ai-modal-footer">
+          <div className={`ai-modal-footer${phase === 'idle' ? ' ai-modal-footer--idle' : ''}`}>
             <ModalFooter
               phase={phase}
               isEditMode={isEditMode}
               canGenerate={canGenerate}
+              selection={selection}
+              availability={availability}
+              transportAvailability={transportAvailability}
+              onModelSelect={handleModelSelect}
+              onReasoningEffortChange={(reasoningEffort) => {
+                setSelection((current) => ({ ...current, reasoningEffort }))
+              }}
+              onManageKeys={handleManageKeys}
               onGenerate={() => void handleGenerate()}
               onCancel={handleCancel}
               onClose={requestClose}
