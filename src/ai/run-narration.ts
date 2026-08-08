@@ -127,10 +127,29 @@ export const flushNarration = (state: NarrationState): NarrationState => {
   }
 }
 
+/** Ends one provider-defined prose segment without merging it into the next one. */
+export const finishNarrationSegment = (
+  state: NarrationState,
+  source: NarrationSource,
+): NarrationState => state.pendingSource === source ? flushNarration(state) : state
+
+const MARKDOWN_EMPHASIS = /(^|[\s([{"'“‘])(\*\*|__|~~|[*_`])(?=\S)([\s\S]*?\S)\2(?=$|[\s)\]}"'”’.,!?;:])/g
+
+/** The run band is plain text even when a provider formats its summaries as Markdown. */
+export const toPlainNarrationText = (value: string): string => value
+  .replace(/\[([^\]]+)]\([^)]+\)/g, '$1')
+  .replace(/(^|\n)\s{0,3}(?:#{1,6}|[-+])\s+/g, '$1')
+  .replace(MARKDOWN_EMPHASIS, '$1$3')
+  .replace(/\s+/g, ' ')
+  .trim()
+
 /** The lines the band renders: finished sentences plus the live one, oldest first. */
 export const getNarrationLines = (state: NarrationState): NarrationSentence[] => {
   const live: NarrationSentence[] = state.pending.trim() && state.pendingSource !== null
     ? [{ id: state.nextId, source: state.pendingSource, text: state.pending.trim() }]
     : []
-  return [...state.sentences, ...live].slice(-VISIBLE_SENTENCE_COUNT)
+  return [...state.sentences, ...live]
+    .map((sentence) => ({ ...sentence, text: toPlainNarrationText(sentence.text) }))
+    .filter((sentence) => sentence.text.length > 0)
+    .slice(-VISIBLE_SENTENCE_COUNT)
 }

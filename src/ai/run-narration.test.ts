@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   appendNarrationDelta,
   createNarrationState,
+  finishNarrationSegment,
   flushNarration,
   getNarrationLines,
+  toPlainNarrationText,
   VISIBLE_SENTENCE_COUNT,
   type NarrationSource,
   type NarrationState,
@@ -74,6 +76,33 @@ describe('appendNarrationDelta', () => {
     const state = stream([['text', 'One. Two. Three.']])
     const ids = getNarrationLines(state).map((line) => line.id)
     expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('keeps provider-defined summary parts as separate streamed lines', () => {
+    const firstPart = stream([['reasoning', '**Planning the screenshot story**']])
+    const nextPart = finishNarrationSegment(firstPart, 'reasoning')
+    const finished = appendNarrationDelta(nextPart, 'reasoning', '**Choosing typography**')
+
+    expect(texts(finished)).toEqual([
+      'Planning the screenshot story',
+      'Choosing typography',
+    ])
+  })
+
+  it('does not finish a segment from another narration source', () => {
+    const state = stream([['reasoning', 'Still reasoning']])
+
+    expect(finishNarrationSegment(state, 'text')).toBe(state)
+  })
+
+  it('renders provider Markdown as compact plain narration', () => {
+    expect(toPlainNarrationText('### **Planning**\n- [Six screens](https://example.com)'))
+      .toBe('Planning Six screens')
+  })
+
+  it('preserves punctuation inside identifiers while removing paired emphasis', () => {
+    expect(toPlainNarrationText('Using snake_case, --color_primary, and **bold text**.'))
+      .toBe('Using snake_case, --color_primary, and bold text.')
   })
 })
 
