@@ -11,7 +11,6 @@ export type AiRunBandProps = {
   narration: NarrationState
   plan: PlannedScreen[]
   slidesBuilt: number
-  toolCallCount: number
   /** Human-readable detail of the most recent tool call, e.g. "Preview checked". */
   latestActivity: string
   summary: string
@@ -63,31 +62,20 @@ const kickerText = (options: {
 
 const BandActions = ({
   phase,
-  toolCallCount,
   latestActivity,
   onCancel,
   onClose,
   onRetry,
-}: Pick<
-  AiRunBandProps,
-  'phase' | 'toolCallCount' | 'latestActivity' | 'onCancel' | 'onClose' | 'onRetry'
->) => (
+}: Pick<AiRunBandProps, 'phase' | 'latestActivity' | 'onCancel' | 'onClose' | 'onRetry'>) => (
   <div className="ai-run-band__meta">
     {phase === 'running' && <span className="ai-run-band__spinner" />}
-    {/* A bare count says only that something happened. The latest tool detail says
-        what, which is the only live signal for a model that streams no reasoning. */}
+    {/* The latest tool detail is the live signal under the divider; a bare count
+        added noise without saying what the model just did. */}
     {phase === 'running' && latestActivity
       ? (
-          <small className="ai-run-band__activity">
-            <b>{toolCallCount}</b>
-            {latestActivity}
-          </small>
+          <small className="ai-run-band__activity">{latestActivity}</small>
         )
-      : (
-          <small>
-            {toolCallCount} {toolCallCount === 1 ? 'action' : 'actions'}
-          </small>
-        )}
+      : null}
     {phase === 'running' && (
       <Button type="button" variant="outline" className="ai-modal-btn-secondary" onClick={onCancel}>
         Cancel
@@ -112,7 +100,6 @@ export const AiRunBand = ({
   narration,
   plan,
   slidesBuilt,
-  toolCallCount,
   latestActivity,
   summary,
   errorMessage,
@@ -160,7 +147,6 @@ export const AiRunBand = ({
         </div>
         <BandActions
           phase={phase}
-          toolCallCount={toolCallCount}
           latestActivity={latestActivity}
           onCancel={onCancel}
           onClose={onClose}

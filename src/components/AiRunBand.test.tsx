@@ -35,7 +35,6 @@ const markup = (overrides: Partial<AiRunBandProps> = {}) => renderToStaticMarkup
     narration={narrationOf([['text', 'Building the hero now.']])}
     plan={plan}
     slidesBuilt={1}
-    toolCallCount={18}
     latestActivity=""
     summary=""
     errorMessage={null}
@@ -62,27 +61,21 @@ describe('AiRunBand', () => {
     expect(html).toContain('ai-run-band__screen--built')
   })
 
-  it('reports an action count instead of a tool log', () => {
-    const html = markup()
-    expect(html).toContain('18 actions')
-    expect(html).not.toContain('update_element')
-  })
-
-  it('names the latest action rather than only counting it', () => {
+  it('names the latest action without a count', () => {
     const html = markup({ latestActivity: 'Preview checked' })
     expect(html).toContain('Preview checked')
-    expect(html).toContain('>18<')
-    expect(html).not.toContain('18 actions')
+    expect(html).not.toContain('actions')
+    expect(html).not.toContain('update_element')
   })
 
   it('keeps raw tool names out of the activity line', () => {
     expect(markup({ latestActivity: 'Element updated' })).not.toContain('update_element')
   })
 
-  it('falls back to the plain count once the run is over', () => {
+  it('hides the activity line once the run is over', () => {
     const html = markup({ phase: 'done', latestActivity: 'Preview checked', summary: 'Done.' })
-    expect(html).toContain('18 actions')
     expect(html).not.toContain('Preview checked')
+    expect(html).not.toContain('actions')
   })
 
   it('shows the current action instead of a dead waiting line before prose arrives', () => {
@@ -93,10 +86,6 @@ describe('AiRunBand', () => {
 
   it('still greets with a waiting line when nothing has happened at all', () => {
     expect(markup({ narration: createNarrationState() })).toContain('Starting up …')
-  })
-
-  it('uses the singular for a single action', () => {
-    expect(markup({ toolCallCount: 1 })).toContain('1 action')
   })
 
   it('distinguishes reasoning from assistant prose', () => {

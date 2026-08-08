@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { clamp } from '../utils'
+import { normalizeAiCopy, normalizeAiHighlights } from './normalize-copy'
 import { buildHighlightHtml } from './richtext'
 import {
   clampBorderRadius,
@@ -108,8 +109,9 @@ const addTextFields = (
   fields: UpdateFields,
   existingText: string,
 ) => {
+  const text = fields.text === undefined ? undefined : normalizeAiCopy(fields.text)
   assignDefined(patch, [
-    ['text', fields.text],
+    ['text', text],
     ['color', fields.color],
     ['fontFamily', fields.fontFamily],
     ['fontSize', fields.fontSize === undefined ? undefined : clampFontSize(fields.fontSize)],
@@ -138,10 +140,13 @@ const addTextFields = (
   ])
 
   if (fields.highlights === undefined) return []
-  const text = fields.text ?? existingText
-  patch['html'] = buildHighlightHtml(text, fields.highlights)
-  return fields.highlights
-    .filter((highlight) => highlight.text && !text.includes(highlight.text))
+  const copy = normalizeAiCopy(text ?? existingText)
+  // Highlight-only updates still clear a stored literal `\n` so matching and canvas agree.
+  if (text === undefined && copy !== existingText) patch['text'] = copy
+  const highlights = normalizeAiHighlights(fields.highlights)
+  patch['html'] = buildHighlightHtml(copy, highlights)
+  return highlights
+    .filter((highlight) => highlight.text && !copy.includes(highlight.text))
     .map((highlight) => highlight.text)
 }
 

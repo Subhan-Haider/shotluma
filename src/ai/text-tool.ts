@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { clamp } from '../utils'
+import { normalizeAiCopy, normalizeAiHighlights } from './normalize-copy'
 import { buildHighlightHtml } from './richtext'
 import {
   clampFontSize,
@@ -93,8 +94,12 @@ export const createAddTextTool = ({ controller, emit }: ToolContext) => tool({
   }) => {
     if (!getSlide(controller, slideId)) return notFound(slideNotFoundMessage(slideId))
 
-    const html = highlights !== undefined
-      ? buildHighlightHtml(text, highlights)
+    const copy = normalizeAiCopy(text)
+    const styledHighlights = highlights === undefined
+      ? undefined
+      : normalizeAiHighlights(highlights)
+    const html = styledHighlights !== undefined
+      ? buildHighlightHtml(copy, styledHighlights)
       : undefined
     const element: Omit<TextElement, 'id'> = {
       type: 'text',
@@ -104,7 +109,7 @@ export const createAddTextTool = ({ controller, emit }: ToolContext) => tool({
       width: clampWidth(width),
       rotation: clampRotation(rotation ?? 0),
       opacity: clampOpacity(opacity ?? 1),
-      text,
+      text: copy,
       color,
       fontFamily,
       fontSize: clampFontSize(fontSize),
@@ -135,8 +140,8 @@ export const createAddTextTool = ({ controller, emit }: ToolContext) => tool({
     if (!elementId) return notFound(slideNotFoundMessage(slideId))
 
     const { box, slideWarnings } = await withMeasurement(controller, slideId, elementId)
-    const unmatchedHighlights = (highlights ?? [])
-      .filter((highlight) => highlight.text && !text.includes(highlight.text))
+    const unmatchedHighlights = (styledHighlights ?? [])
+      .filter((highlight) => highlight.text && !copy.includes(highlight.text))
       .map((highlight) => highlight.text)
     return {
       ok: true,

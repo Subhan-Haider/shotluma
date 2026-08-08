@@ -362,7 +362,6 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   const [narration, setNarration] = useState<NarrationState>(createNarrationState)
   const [plan, setPlan] = useState<PlannedScreen[]>([])
   const [slidesBuilt, setSlidesBuilt] = useState(0)
-  const [toolCallCount, setToolCallCount] = useState(0)
   const [latestActivity, setLatestActivity] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [doneInfo, setDoneInfo] = useState<{ summary: string; slidesCreated: number } | null>(null)
@@ -447,7 +446,6 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   const handleEvent = (event: AiRunEvent) => {
     if (cancelledRef.current) return
     if (event.type === 'tool') {
-      setToolCallCount((current) => current + 1)
       setLatestActivity(event.detail)
     } else if (event.type === 'plan') setPlan(event.screens)
     // `index` is the count of screens finished before this one, which is exactly the
@@ -489,7 +487,6 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
     setNarration(createNarrationState())
     setPlan([])
     setSlidesBuilt(0)
-    setToolCallCount(0)
     setLatestActivity('')
     setErrorMessage(null)
     setDoneInfo(null)
@@ -531,7 +528,6 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
         narration={narration}
         plan={plan}
         slidesBuilt={slidesBuilt}
-        toolCallCount={toolCallCount}
         latestActivity={latestActivity}
         summary={doneInfo?.summary.trim() ? doneInfo.summary : assistantText}
         errorMessage={errorMessage}

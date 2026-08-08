@@ -969,19 +969,10 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 /* One line, ellipsised: a long tool detail must not wrap and grow the footer,
    which would reintroduce the jumping the fixed prose height just removed. */
 .ai-run-band__activity {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-.ai-run-band__activity b {
-  flex: 0 0 auto;
-  font-variant-numeric: tabular-nums;
-  font-weight: 650;
-  color: color-mix(in oklch, var(--foreground) 62%, transparent);
 }
 .ai-run-band__meta > :last-child { margin-left: auto; }
 .ai-run-band__spinner {

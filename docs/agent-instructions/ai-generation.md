@@ -62,6 +62,8 @@ Clear selection before generation and preview capture. Any live overlay must car
 
 Rich text comes from structured highlights through `src/ai/richtext.ts`. The model never writes raw HTML. `sanitizeRichText` remains the final whitelist.
 
+Canvas copy from `add_text` / `update_element` passes through `normalizeAiCopy` (`src/ai/normalize-copy.ts`) so double-escaped `\n` sequences become real line breaks before they hit the element. Do not rely on a preview repair round for that.
+
 The stream runner reports errors and aborts as events instead of rejecting. Preserve visible reasoning progress for long-running reasoning models.
 
 ## Run band
