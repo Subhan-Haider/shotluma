@@ -58,7 +58,51 @@ describe('buildStreamRequestOptions', () => {
     )
 
     // gemini-3.6-flash supports 'high' (the default), so it's auto-selected
-    expect(options).toEqual({ reasoning: 'high' })
+    expect(options.reasoning).toBe('high')
+  })
+
+  /**
+   * Google reads `includeThoughts` only from its own provider options — the portable
+   * `reasoning` value has no fallback for it. Without this, Gemini thinks, bills the
+   * tokens, and returns no thought summaries at all.
+   */
+  it('always asks Google for thought summaries', () => {
+    const options = buildStreamRequestOptions(
+      { provider: 'google', model: 'gemini-3.6-flash', reasoningEffort: 'medium' },
+      'run-key-6',
+    )
+
+    expect(options).toEqual({
+      reasoning: 'medium',
+      providerOptions: { google: { thinkingConfig: { includeThoughts: true } } },
+    })
+  })
+
+  it('asks for thought summaries on every Gemini model in the catalog', () => {
+    for (const model of ['gemini-3.6-flash', 'gemini-3.1-pro-preview', 'gemini-3.5-flash-lite']) {
+      const options = buildStreamRequestOptions({ provider: 'google', model }, 'run-key-7')
+
+      expect(options.providerOptions?.google).toEqual({ thinkingConfig: { includeThoughts: true } })
+    }
+  })
+
+  it('never sends Google a thinking level that would override the effort choice', () => {
+    const options = buildStreamRequestOptions(
+      { provider: 'google', model: 'gemini-3.6-flash', reasoningEffort: 'low' },
+      'run-key-8',
+    )
+
+    expect(options.providerOptions?.google?.thinkingConfig).toEqual({ includeThoughts: true })
+    expect(options.reasoning).toBe('low')
+  })
+
+  it('does not send Google options to other providers', () => {
+    const options = buildStreamRequestOptions(
+      { provider: 'openai', model: 'gpt-5.6-luna', reasoningEffort: 'high' },
+      'run-key-9',
+    )
+
+    expect(options.providerOptions?.google).toBeUndefined()
   })
 })
 

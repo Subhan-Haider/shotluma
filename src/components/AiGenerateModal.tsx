@@ -363,6 +363,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   const [plan, setPlan] = useState<PlannedScreen[]>([])
   const [slidesBuilt, setSlidesBuilt] = useState(0)
   const [toolCallCount, setToolCallCount] = useState(0)
+  const [latestActivity, setLatestActivity] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [doneInfo, setDoneInfo] = useState<{ summary: string; slidesCreated: number } | null>(null)
   const [selection, setSelection] = useState<AiModelSelection>(INITIAL_AI_SELECTION)
@@ -445,8 +446,10 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
 
   const handleEvent = (event: AiRunEvent) => {
     if (cancelledRef.current) return
-    if (event.type === 'tool') setToolCallCount((current) => current + 1)
-    else if (event.type === 'plan') setPlan(event.screens)
+    if (event.type === 'tool') {
+      setToolCallCount((current) => current + 1)
+      setLatestActivity(event.detail)
+    } else if (event.type === 'plan') setPlan(event.screens)
     // `index` is the count of screens finished before this one, which is exactly the
     // rail's "built" count while this screen is in progress.
     else if (event.type === 'slide-started') setSlidesBuilt(event.index)
@@ -487,6 +490,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
     setPlan([])
     setSlidesBuilt(0)
     setToolCallCount(0)
+    setLatestActivity('')
     setErrorMessage(null)
     setDoneInfo(null)
     setPhase('running')
@@ -528,6 +532,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
         plan={plan}
         slidesBuilt={slidesBuilt}
         toolCallCount={toolCallCount}
+        latestActivity={latestActivity}
         summary={doneInfo?.summary.trim() ? doneInfo.summary : assistantText}
         errorMessage={errorMessage}
         onCancel={handleCancel}

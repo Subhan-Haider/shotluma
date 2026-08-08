@@ -13,9 +13,28 @@ import type { ModelMessage } from 'ai'
 export type AiStreamRequestOptions = {
   reasoning?: AiSdkReasoningEffort
   providerOptions?: {
-    openai: { reasoningEffort?: 'max'; promptCacheKey?: string }
+    openai?: { reasoningEffort?: 'max'; promptCacheKey?: string }
+    google?: { thinkingConfig: { includeThoughts: true } }
   }
 }
+
+/**
+ * Reasoning *visibility* is a separate switch from reasoning *effort*, and the
+ * providers are asymmetric about it.
+ *
+ * OpenAI's Responses API defaults `reasoningSummary` to `'detailed'` as soon as an
+ * effort is set, so thoughts stream without being asked for. Google does not: in
+ * `@ai-sdk/google`, `thinkingLevel` and `thinkingBudget` fall back to the mapped
+ * top-level `reasoning` value, but `includeThoughts` is read *only* from
+ * `providerOptions.google.thinkingConfig`, with no fallback. Omit it and Gemini
+ * still thinks and still bills those tokens while withholding every thought
+ * summary — the run band then has no live prose to show for the whole run.
+ *
+ * Keep this object limited to `includeThoughts`. Adding `thinkingLevel` or
+ * `thinkingBudget` here would take full precedence over the portable `reasoning`
+ * option and silently discard the user's effort choice.
+ */
+const GOOGLE_THOUGHT_OPTIONS = { thinkingConfig: { includeThoughts: true } } as const
 
 /**
  * Combine the reasoning-effort options with an OpenAI `promptCacheKey`.
@@ -30,6 +49,14 @@ export const buildStreamRequestOptions = (
   promptCacheKey: string,
 ): AiStreamRequestOptions => {
   const reasoningOptions = getAiStreamReasoningOptions(selection)
+  if (selection.provider === 'google') {
+    return {
+      ...(reasoningOptions && 'reasoning' in reasoningOptions
+        ? { reasoning: reasoningOptions.reasoning }
+        : {}),
+      providerOptions: { google: GOOGLE_THOUGHT_OPTIONS },
+    }
+  }
   if (selection.provider !== 'openai') return reasoningOptions ?? {}
 
   const openaiReasoning

@@ -931,13 +931,23 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   color: var(--muted-foreground);
   margin-bottom: 9px;
 }
+/* The height is fixed, not min/max: prose arrives in bursts of very different
+   length, and letting the box track its content makes the whole band jump on
+   every delta. Four lines at this size is the budget; `column-reverse` keeps the
+   newest line pinned to the bottom edge so overflow scrolls older text out of
+   view upward instead of pushing the live sentence out of sight. */
 .ai-run-band__live {
   font-size: 13.5px;
   line-height: 1.6;
   letter-spacing: -.1px;
   color: var(--ink);
-  min-height: 44px;
+  height: calc(13.5px * 1.6 * 4);
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  overflow: hidden;
 }
+.ai-run-band__live-inner { flex: 0 0 auto; }
 .ai-run-band__live--error { color: #b5402a; }
 /* Older sentences fade instead of scrolling away, so the band never grows a
    scroll area and the newest sentence is always the most legible one. */
@@ -956,6 +966,23 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   border-top: 1px solid var(--line);
 }
 .ai-run-band__meta small { font-size: 10.5px; color: var(--muted-foreground); }
+/* One line, ellipsised: a long tool detail must not wrap and grow the footer,
+   which would reintroduce the jumping the fixed prose height just removed. */
+.ai-run-band__activity {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ai-run-band__activity b {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: color-mix(in oklch, var(--foreground) 62%, transparent);
+}
 .ai-run-band__meta > :last-child { margin-left: auto; }
 .ai-run-band__spinner {
   width: 11px;

@@ -36,6 +36,7 @@ const markup = (overrides: Partial<AiRunBandProps> = {}) => renderToStaticMarkup
     plan={plan}
     slidesBuilt={1}
     toolCallCount={18}
+    latestActivity=""
     summary=""
     errorMessage={null}
     onCancel={vi.fn()}
@@ -65,6 +66,33 @@ describe('AiRunBand', () => {
     const html = markup()
     expect(html).toContain('18 actions')
     expect(html).not.toContain('update_element')
+  })
+
+  it('names the latest action rather than only counting it', () => {
+    const html = markup({ latestActivity: 'Preview checked' })
+    expect(html).toContain('Preview checked')
+    expect(html).toContain('>18<')
+    expect(html).not.toContain('18 actions')
+  })
+
+  it('keeps raw tool names out of the activity line', () => {
+    expect(markup({ latestActivity: 'Element updated' })).not.toContain('update_element')
+  })
+
+  it('falls back to the plain count once the run is over', () => {
+    const html = markup({ phase: 'done', latestActivity: 'Preview checked', summary: 'Done.' })
+    expect(html).toContain('18 actions')
+    expect(html).not.toContain('Preview checked')
+  })
+
+  it('shows the current action instead of a dead waiting line before prose arrives', () => {
+    const html = markup({ narration: createNarrationState(), latestActivity: 'Background updated' })
+    expect(html).toContain('Background updated')
+    expect(html).not.toContain('Starting up …')
+  })
+
+  it('still greets with a waiting line when nothing has happened at all', () => {
+    expect(markup({ narration: createNarrationState() })).toContain('Starting up …')
   })
 
   it('uses the singular for a single action', () => {

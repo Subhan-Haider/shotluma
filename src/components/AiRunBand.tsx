@@ -12,6 +12,8 @@ export type AiRunBandProps = {
   plan: PlannedScreen[]
   slidesBuilt: number
   toolCallCount: number
+  /** Human-readable detail of the most recent tool call, e.g. "Preview checked". */
+  latestActivity: string
   summary: string
   errorMessage: string | null
   onCancel: () => void
@@ -62,15 +64,30 @@ const kickerText = (options: {
 const BandActions = ({
   phase,
   toolCallCount,
+  latestActivity,
   onCancel,
   onClose,
   onRetry,
-}: Pick<AiRunBandProps, 'phase' | 'toolCallCount' | 'onCancel' | 'onClose' | 'onRetry'>) => (
+}: Pick<
+  AiRunBandProps,
+  'phase' | 'toolCallCount' | 'latestActivity' | 'onCancel' | 'onClose' | 'onRetry'
+>) => (
   <div className="ai-run-band__meta">
     {phase === 'running' && <span className="ai-run-band__spinner" />}
-    <small>
-      {toolCallCount} {toolCallCount === 1 ? 'action' : 'actions'}
-    </small>
+    {/* A bare count says only that something happened. The latest tool detail says
+        what, which is the only live signal for a model that streams no reasoning. */}
+    {phase === 'running' && latestActivity
+      ? (
+          <small className="ai-run-band__activity">
+            <b>{toolCallCount}</b>
+            {latestActivity}
+          </small>
+        )
+      : (
+          <small>
+            {toolCallCount} {toolCallCount === 1 ? 'action' : 'actions'}
+          </small>
+        )}
     {phase === 'running' && (
       <Button type="button" variant="outline" className="ai-modal-btn-secondary" onClick={onCancel}>
         Cancel
@@ -96,6 +113,7 @@ export const AiRunBand = ({
   plan,
   slidesBuilt,
   toolCallCount,
+  latestActivity,
   summary,
   errorMessage,
   onCancel,
@@ -120,25 +138,30 @@ export const AiRunBand = ({
           {kickerText({ phase, ...(targetName ? { targetName } : {}), entries, plannedTotal: plan.length })}
         </div>
         <div className={`ai-run-band__live${phase === 'error' ? ' ai-run-band__live--error' : ''}`}>
-          {closingText
-            ? closingText
-            : lines.map((line, index) => (
-                <span
-                  className={`ai-run-band__line ai-run-band__line--${line.source}${
-                    index < lines.length - 1 ? ' ai-run-band__line--past' : ''
-                  }`}
-                  key={line.id}
-                >
-                  {line.text}
-                </span>
-              ))}
-          {!closingText && lines.length === 0 && (
-            <span className="ai-run-band__line ai-run-band__line--waiting">Starting up …</span>
-          )}
+          <div className="ai-run-band__live-inner">
+            {closingText
+              ? closingText
+              : lines.map((line, index) => (
+                  <span
+                    className={`ai-run-band__line ai-run-band__line--${line.source}${
+                      index < lines.length - 1 ? ' ai-run-band__line--past' : ''
+                    }`}
+                    key={line.id}
+                  >
+                    {line.text}
+                  </span>
+                ))}
+            {!closingText && lines.length === 0 && (
+              <span className="ai-run-band__line ai-run-band__line--waiting">
+                {latestActivity || 'Starting up …'}
+              </span>
+            )}
+          </div>
         </div>
         <BandActions
           phase={phase}
           toolCallCount={toolCallCount}
+          latestActivity={latestActivity}
           onCancel={onCancel}
           onClose={onClose}
           onRetry={onRetry}
