@@ -46,7 +46,7 @@ export const createInspectionTools = ({ controller, emit }: ToolContext) => {
 
   const inspectSlide = tool({
     description:
-      'Get the true rendered bounding box of every element on a slide (x/width as percent of canvas width, y/height as percent of canvas height) plus layout warnings (overflow, overlaps). Call it whenever you need to verify a slide\'s layout before moving on.',
+      'Get the true rendered bounding box of every element on a slide (x/width as percent of canvas width, y/height as percent of canvas height) plus layout warnings (overflow, overlaps). Rarely needed: every mutating tool already returns the element\'s box and the slide\'s warnings - reach for this only when you need a fresh full snapshot of every box without rendering a preview.',
     inputSchema: z.object({ slideId: z.string() }),
     execute: async ({ slideId }) => {
       if (!getSlide(controller, slideId)) return notFound(slideNotFoundMessage(slideId))

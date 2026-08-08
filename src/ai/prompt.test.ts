@@ -126,3 +126,35 @@ describe('AI prompt overlay assets', () => {
     expect(instructions).not.toContain('Pick the subject during step 2')
   })
 })
+
+describe('AI prompt batching', () => {
+  it('instructs the model to batch independent tool calls in one turn', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('Batch your tool calls')
+    expect(instructions).toContain('Never add one element per turn')
+    expect(instructions).toContain('Request every tool call whose inputs you already know TOGETHER in one turn')
+  })
+
+  it('tells the model to batch whole slide composition, repairs, and final renders', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('Build a whole slide in one turn')
+    expect(instructions).toContain('Batch each repair round')
+    expect(instructions).toContain('every update_element fix plus the follow-up render_slide_preview')
+    expect(instructions).toContain('emit its full planned composition as ONE batched turn')
+  })
+
+  it('instructs a batched final pass in generate mode', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('request render_slide_preview for EVERY slide together in one batched turn')
+  })
+
+  it('frames inspect_slide as rarely needed since mutations return boxes and warnings', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('Mutation results already return the element\'s box and the slide\'s warnings')
+    expect(instructions).toContain('inspect_slide is almost never worth its own turn')
+  })
+})

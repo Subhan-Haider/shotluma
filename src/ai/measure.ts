@@ -30,6 +30,10 @@ export async function settleFrames(): Promise<void> {
 const EDGE_TOLERANCE = 0.5
 const OVERLAP_RATIO_THRESHOLD = 0.12
 
+// Boxes travel through every subsequent model turn as tool-result payload;
+// one decimal keeps them compact and sub-0.1% precision is layout noise anyway.
+const roundPercent = (value: number) => Math.round(value * 10) / 10
+
 const textOverflowWarnings = (box: ElementBox): string[] => {
   const warnings: string[] = []
   const right = box.x + box.width
@@ -98,10 +102,10 @@ export function measureSlideSync(slideId: string, elementTypes: Record<string, s
     const rect = node.getBoundingClientRect()
     boxes.push({
       elementId,
-      x: ((rect.left - artboardRect.left) / artboardRect.width) * 100,
-      y: ((rect.top - artboardRect.top) / artboardRect.height) * 100,
-      width: (rect.width / artboardRect.width) * 100,
-      height: (rect.height / artboardRect.height) * 100,
+      x: roundPercent(((rect.left - artboardRect.left) / artboardRect.width) * 100),
+      y: roundPercent(((rect.top - artboardRect.top) / artboardRect.height) * 100),
+      width: roundPercent((rect.width / artboardRect.width) * 100),
+      height: roundPercent((rect.height / artboardRect.height) * 100),
     })
   })
 

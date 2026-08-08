@@ -1,5 +1,15 @@
 # AI generation invariants
 
+## Prompt caching and cost optimization
+
+Every step of a multi-step AI run re-reads the growing conversation history, so the input token count scales quadratically with the number of turns. Prompt caching converts most of that re-read cost into 90% discounted cache reads. The runner applies provider-specific cache routing:
+
+- **Anthropic**: explicit `cacheControl` breakpoint on the last message, moved forward by `prepareStep` on each step (`src/ai/prompt-caching.ts`). Without this, Anthropic caches nothing and every step pays the full input price.
+- **OpenAI**: per-run `promptCacheKey` in `providerOptions.openai` keeps every step of the tool loop on the same cache replica for reliable prefix matching. GPT-5.6 caches automatically with a 30-minute TTL; cache writes are billed at 1.25× but reads get the 90% discount.
+- **Google Gemini**: implicit caching is automatic on 2.5+ models. No configuration needed; savings are passed through when request prefixes match.
+
+The prompt in `src/ai/prompt.ts` instructs the model to batch independent tool calls in one turn (whole slide composition, repair rounds, final preview pass) rather than issuing calls one at a time. Batching directly reduces the number of turns and therefore the quadratic input token cost. Measurement boxes are rounded to one decimal (`src/ai/measure.ts`) to keep tool-result payloads compact across the accumulated history.
+
 ## Security and provider boundary
 
 The browser uses the AI SDK's native Google, Alibaba/Qwen, OpenAI, Anthropic, and xAI providers directly. Moonshot uses the OpenAI chat provider through the local `/api/moonshot` CORS proxy.

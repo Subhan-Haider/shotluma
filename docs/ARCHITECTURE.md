@@ -116,6 +116,7 @@ The AI feature is split into explicit layers:
 | --- | --- |
 | `src/ai/runner.ts` | Provider client, stream handling, and UI events |
 | `src/ai/prompt.ts` | Design rules and coordinate semantics |
+| `src/ai/prompt-caching.ts` | Per-provider cache routing (Anthropic breakpoints, OpenAI cache keys) |
 | `src/ai/tools.ts` | Tool composition and generate/edit tool boundary |
 | `src/ai/*-tools.ts`, `src/ai/*-tool.ts` | Focused slide, media, text, update, inspection, and overlay-asset tools |
 | `src/ai/chroma-key.ts` | Pure soft chroma-key pixel math for overlay cutouts |

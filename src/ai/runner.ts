@@ -3,17 +3,22 @@ import {
   isStepCount,
   streamText,
   type FinishReason,
+  type ModelMessage,
   type TextStreamPart,
   type ToolSet,
 } from 'ai'
+import { uid } from '../utils'
 import { scopeAiControllerToSlide, type AiEditorController } from './controller'
 import { buildInstructions, buildUserMessage } from './prompt'
+import {
+  buildStreamRequestOptions,
+  withMovingAnthropicCacheBreakpoint,
+} from './prompt-caching'
 import {
   AI_REASONING_EFFORT_LABELS,
   getAiModel,
   getAiProvider,
   getAiSdkReasoningEffort,
-  getAiStreamReasoningOptions,
   type AiModelSelection,
 } from './provider-catalog'
 import {
@@ -280,7 +285,7 @@ const openAiGenerationStream = (options: {
   const runController = targetSlideId
     ? scopeAiControllerToSlide(controller, targetSlideId)
     : controller
-  const reasoningOptions = getAiStreamReasoningOptions(selection)
+  const requestOptions = buildStreamRequestOptions(selection, uid('shotluma-run'))
 
   return streamText({
     model,
@@ -296,7 +301,16 @@ const openAiGenerationStream = (options: {
       ...(signal ? { abortSignal: signal } : {}),
     }),
     stopWhen: isStepCount(64),
-    ...(reasoningOptions ?? {}),
+    ...requestOptions,
+    // Anthropic caches nothing without explicit breakpoints; keep one moving
+    // breakpoint on the last message so every step reuses the whole prefix.
+    ...(selection.provider === 'anthropic'
+      ? {
+          prepareStep: ({ messages }: { messages: ModelMessage[] }) => ({
+            messages: withMovingAnthropicCacheBreakpoint(messages),
+          }),
+        }
+      : {}),
     ...(signal ? { abortSignal: signal } : {}),
   })
 }

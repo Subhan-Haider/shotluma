@@ -26,13 +26,13 @@ export function buildInstructions(options: AiPromptOptions = {}): string {
    - Palette: background, text color, one accent. Be confident - a saturated brand color or a rich dark tone as a full-bleed background almost always beats a timid neutral. Take cues from the app's own screenshots, logo, and subject.
    - One font pairing (a display face for headlines, a quieter face for supporting copy) and ONE highlight treatment.
    - A composition plan: assign every slide an archetype from the library below. No two adjacent slides may use the same archetype, and a set should use at least 3 different ones.
-5. Build each slide following its archetype, then run the verify routine below before moving on to the next slide.`
+5. Build each slide following its archetype - emit its full planned composition as ONE batched turn (see "Batch your tool calls") - then run the verify routine below before moving on to the next slide.`
   const layoutContext = targetSlideId
     ? 'Use these archetypes only as optional composition references when the requested edit calls for layout changes. Do not force a new archetype onto an otherwise focused edit.'
     : 'The first slide is the hook: give it the strongest, punchiest claim about the app and one of the more striking archetypes (GIANT CROP, HAND-HELD, TEXT OVER DEVICE). Later slides build the story - features, moments, proof, or a call to action.'
   const finalReview = targetSlideId
     ? `After the edit, render slide "${targetSlideId}" once more and fix only clear defects you can actually see in the image.`
-    : 'After the LAST slide, do one final pass: render every slide once more and fix only clear defects you can actually see in the image.'
+    : 'After the LAST slide, do one final pass: request render_slide_preview for EVERY slide together in one batched turn, then fix only clear defects you can actually see in the images.'
   const consistency = targetSlideId
     ? 'Keep the screen consistent with its existing visual system unless the user explicitly requests a redesign.'
     : 'Consistency lives in the SYSTEM, not in repeating one layout. Across every slide keep the same palette, the same font pairing, the same accent color, the same highlight treatment, the same device screenTheme, and a consistent shape vocabulary - while the composition changes from slide to slide via the archetypes.'
@@ -107,6 +107,13 @@ The canvas is a portrait artboard, 1290x2796 px. Every position and size you pas
 ## Process
 ${process}
 
+## Batch your tool calls
+Every turn of yours is a full model round trip - the slowest and most expensive unit of this job. Never add one element per turn. Request every tool call whose inputs you already know TOGETHER in one turn:
+- Build a whole slide in one turn: set_slide_background plus every add_* call of its planned composition. Calls execute in the order you list them and paint order follows that order, so list background shapes first, then devices, then icons and text.
+- Batch each repair round: every update_element fix plus the follow-up render_slide_preview in the same turn - the preview runs after the fixes and shows the repaired slide.
+- Split turns only when a later call genuinely depends on an earlier call's result: a new slide's id from add_slide, a generated asset id, or a measurement you must read before deciding a fix.
+- Mutation results already return the element's box and the slide's warnings, so inspect_slide is almost never worth its own turn.
+
 ## Layout archetypes
 Coordinates are proven starting points - adapt them to the content, don't treat them as law.
 - CLASSIC HERO: headline at the top (y 5-9), supporting copy below it, upright device (iphone-17-a/b) at width 58-72 / x 14-21 / y 30-42. The safe default - use it at most twice per set.
@@ -132,7 +139,7 @@ Treat warnings as evidence, not commands:
 After composing each slide:
 1. Fix real defects; for intentional overlaps, confirm legibility in the preview instead of "fixing" them away.
 2. Call render_slide_preview and actually study the returned image: does the headline fit without clipping, is every word legible against what is behind it, is the device's focal screen content fully visible (not cropped away by a canvas edge), does the composition have energy, does it actually fill the tall canvas or is a large stretch of it sitting empty, does the slide feel like part of the same set as the others?
-3. If you spot issues, fix them with update_element and re-render. Allow at most 2 repair rounds per slide, then move on - do not get stuck perfecting a single screen.
+3. If you spot issues, fix them and re-render as one batched turn: all update_element calls plus the render_slide_preview together. Allow at most 2 repair rounds per slide, then move on - do not get stuck perfecting a single screen.
 
 ${finalReview}
 
