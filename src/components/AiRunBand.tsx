@@ -73,7 +73,7 @@ const BandActions = ({
         added noise without saying what the model just did. */}
     {phase === 'running' && latestActivity
       ? (
-          <small className="ai-run-band__activity">{latestActivity}</small>
+          <small className="ai-run-band__activity shimmer">{latestActivity}</small>
         )
       : null}
     {phase === 'running' && (

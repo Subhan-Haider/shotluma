@@ -64,6 +64,7 @@ describe('AiRunBand', () => {
   it('names the latest action without a count', () => {
     const html = markup({ latestActivity: 'Preview checked' })
     expect(html).toContain('Preview checked')
+    expect(html).toContain('ai-run-band__activity shimmer')
     expect(html).not.toContain('actions')
     expect(html).not.toContain('update_element')
   })
