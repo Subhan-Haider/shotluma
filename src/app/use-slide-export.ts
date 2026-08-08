@@ -1,4 +1,4 @@
-import { getFontEmbedCSS, toBlob } from 'html-to-image'
+import { getFontEmbedCSS, toBlob, toCanvas } from 'html-to-image'
 import JSZip from 'jszip'
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react'
 import { downloadBlob } from '../utils'
@@ -8,6 +8,7 @@ import {
   type ExportFormat,
   type ExportTarget,
 } from './export-formats'
+import { buildExportImageSources } from './export-image-payload'
 import {
   getExportZipDownloadName,
   getExportZipEntryPath,
@@ -29,7 +30,7 @@ async function renderSlidePng(
   const node = document.getElementById(`artboard-${slide.id}`)
   if (!node) return null
 
-  return toBlob(node, {
+  const options = {
     pixelRatio: 1,
     width: EXPORT_ARTBOARD_WIDTH,
     height: EXPORT_ARTBOARD_WIDTH * format.height / format.width,
@@ -37,9 +38,72 @@ async function renderSlidePng(
     canvasHeight: format.height,
     backgroundColor: slide.background.color1,
     ...(fontEmbedCSS ? { fontEmbedCSS } : {}),
-    filter: (candidate) =>
+    filter: (candidate: HTMLElement) =>
       !(candidate instanceof HTMLElement && candidate.dataset['aiOverlay']),
+  }
+
+  // WebKit can rasterise a snapshot before the images nested inside it are
+  // ready, dropping them from the first capture of an artboard. Rasterising
+  // the same snapshot once without encoding a PNG primes it, so the capture
+  // that is kept matches the editor.
+  await toCanvas(node, options)
+  return toBlob(node, options)
+}
+
+/**
+ * Every artboard image paired with the size it covers once the artboard is
+ * rasterised at `exportWidth`. Artboards are laid out at a fixed CSS width and
+ * only scaled for zoom, so the ratio between the artboard's on-screen box and
+ * the export width converts any child's box into export pixels — including the
+ * device screens, whose perspective transform is already part of their box.
+ */
+const collectArtboardImages = (slides: Slide[], exportWidth: number) =>
+  slides.flatMap((slide) => {
+    const node = document.getElementById(`artboard-${slide.id}`)
+    const artboard = node?.getBoundingClientRect()
+    if (!node || !artboard || artboard.width <= 0) return []
+
+    const exportScale = exportWidth / artboard.width
+    return [...node.querySelectorAll('img')].map((image) => {
+      const rect = image.getBoundingClientRect()
+      return {
+        image,
+        footprint: {
+          width: rect.width * exportScale,
+          height: rect.height * exportScale,
+        },
+      }
+    })
   })
+
+/**
+ * Swaps every image on the artboards for an export-sized re-encode and returns
+ * the undo. React never rewrites a `src` prop it did not change, so the
+ * substitution survives the progress updates the export loop performs.
+ */
+async function applyExportImageSources(slides: Slide[], exportWidth: number) {
+  const placements = collectArtboardImages(slides, exportWidth)
+  const sources = await buildExportImageSources(
+    placements.map(({ image, footprint }) => ({ src: image.src, footprint })),
+  )
+  const restores: (() => void)[] = []
+
+  for (const { image } of placements) {
+    const exportSource = sources.get(image.src)
+    if (!exportSource) continue
+    const originalSource = image.src
+    image.src = exportSource
+    restores.push(() => {
+      image.src = originalSource
+    })
+  }
+
+  await Promise.all(
+    placements.map(({ image }) => image.decode().catch(() => undefined)),
+  )
+  return () => {
+    for (const restore of restores) restore()
+  }
 }
 
 export function useSlideExport({
@@ -58,12 +122,16 @@ export function useSlideExport({
     const nested = target === 'all'
     const total = slides.length * formats.length
 
+    const exportWidth = Math.max(...formats.map((format) => format.width))
+
     setExporting(true)
     setExportProgress(0)
     clearSelection()
+    let restoreImageSources: (() => void) | null = null
     try {
       await document.fonts.ready
       await new Promise((resolve) => window.setTimeout(resolve, 120))
+      restoreImageSources = await applyExportImageSources(slides, exportWidth)
       const zip = new JSZip()
       const firstSlide = slides[0]
       const firstNode = firstSlide
@@ -104,6 +172,7 @@ export function useSlideExport({
       console.error(error)
       setToast('Export failed — please try again')
     } finally {
+      restoreImageSources?.()
       setExporting(false)
       setExportProgress(0)
     }

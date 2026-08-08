@@ -15,6 +15,7 @@ export default defineConfig({
         'src/ai/provider-catalog.ts',
         'src/ai/richtext.ts',
         'src/ai/run-log.ts',
+        'src/app/export-image-sizing.ts',
         'src/app/project-utils.ts',
         'src/editor/drag-bounds.ts',
         'src/editor/element-utils.ts',
