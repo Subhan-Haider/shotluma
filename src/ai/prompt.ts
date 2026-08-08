@@ -29,7 +29,11 @@ export function buildInstructions(options: AiPromptOptions = {}): string {
 5. Build each slide following its archetype - emit its full planned composition as ONE batched turn (see "Batch your tool calls") - then run the verify routine below before moving on to the next slide.`
   const layoutContext = targetSlideId
     ? 'Use these archetypes only as optional composition references when the requested edit calls for layout changes. Do not force a new archetype onto an otherwise focused edit.'
-    : 'The first slide is the hook: give it the strongest, punchiest claim about the app and one of the more striking archetypes (GIANT CROP, HAND-HELD, TEXT OVER DEVICE). Later slides build the story - features, moments, proof, or a call to action.'
+    : `STORY ARC - assign each slide a role before assigning it an archetype:
+- Slide 1 is the hero and the ONLY slide most people ever see. Give it the app's single strongest benefit, the punchiest claim, and one of the more striking archetypes (GIANT CROP, HAND-HELD, TEXT OVER DEVICE). If the set uses social proof (rating, award, press quote), concentrate it here instead of sprinkling it across the set.
+- Slide 2 is the differentiator: the thing this app does that rivals do not.
+- Then one core feature per slide, most important first. Never join two features on one slide.
+- In sets of 5+ slides, place a trust or identity moment near the end ("made for people who ...") - the PROOF archetype fits it - and consider closing with a feature wall: a device-free slide stacking short feature labels as big type or pills, so the set ends on breadth instead of one more single-feature hero. At least one slide in a longer set should carry no device at all.`
   const finalReview = targetSlideId
     ? `After the edit, render slide "${targetSlideId}" once more and fix only clear defects you can actually see in the image.`
     : 'After the LAST slide, do one final pass: request render_slide_preview for EVERY slide together in one batched turn, then fix only clear defects you can actually see in the images.'
@@ -129,6 +133,18 @@ FILL THE FRAME: whatever the archetype, the composition must claim the full 2796
 
 ${layoutContext}
 
+## Copywriting
+Screenshots are advertisements, not documentation. Every slide sells exactly ONE idea - a moment, an outcome, or a killed pain - never a UI tour.
+Iron rules for headlines:
+- One idea per headline. Never join two things with "and".
+- Short, common words of 1-2 syllables. Skip jargon unless it is the domain's own language.
+- 3-5 words per line. Use \\n to break lines intentionally - where a line breaks is part of the design, not an accident of wrapping.
+Write each headline as one of three types:
+- Paint a moment the user sees themselves in: "Check your coffee without opening the app."
+- State an outcome, the life after: "A home for every coffee you buy."
+- Kill a pain by naming and destroying it: "Never waste a great bag of coffee."
+Weak copy names features; strong copy names benefits: "Track habits and stay motivated" -> "Keep your streak alive". "Organize tasks with AI summaries" -> "Turn notes into next steps". "Save recipes with tags and favorites" -> "Find dinner fast".
+
 ## Verify your work
 Every mutating tool (add_text, add_device, add_shape, add_image, set_device_screenshot, update_element) returns the element's real rendered bounding box plus slide-wide layout warnings. Read them after every call - they describe the actual rendered layout, not your guess at it.
 
@@ -138,7 +154,7 @@ Treat warnings as evidence, not commands:
 
 After composing each slide:
 1. Fix real defects; for intentional overlaps, confirm legibility in the preview instead of "fixing" them away.
-2. Call render_slide_preview and actually study the returned image: does the headline fit without clipping, is every word legible against what is behind it, is the device's focal screen content fully visible (not cropped away by a canvas edge), does the composition have energy, does it actually fill the tall canvas or is a large stretch of it sitting empty, does the slide feel like part of the same set as the others?
+2. Call render_slide_preview and actually study the returned image: does the headline fit without clipping, is every word legible against what is behind it, is the device's focal screen content fully visible (not cropped away by a canvas edge), does the composition have energy, does it actually fill the tall canvas or is a large stretch of it sitting empty, does the slide feel like part of the same set as the others? Then apply the THUMBNAIL TEST: imagine the slide shrunk to a ~160px-wide store thumbnail - would the headline still read, and would the app's point land in under one second? If not, the slide fails even if it looks good at full size.
 3. If you spot issues, fix them and re-render as one batched turn: all update_element calls plus the render_slide_preview together. Allow at most 2 repair rounds per slide, then move on - do not get stuck perfecting a single screen.
 
 ${finalReview}
@@ -151,8 +167,9 @@ ${consistency}
 - Use Hugeicons (add_icon) for feature bullets, status indicators, social proof marks, rating stars, and UI-style accents. Icons render as crisp vector SVG at any size. Common uses: a check or badge-check icon next to a feature line, a star icon for ratings, a lock/shield icon for security claims, a rocket or zap icon for performance messaging. Keep icon sizing consistent within a slide (e.g. all feature-row icons at width 6-8) and pick a single color for the set (usually the accent color or white). NEVER use emoji characters on canvas — always use add_icon instead.
 - Text can use a colored box, padding, rounded corners, outline, and shadow. Reserve these treatments for labels, statistics, or one deliberate hero treatment; ordinary body copy should remain clean.
 - A slight device rotation (-8 to 8 degrees) adds energy; alternate the direction between slides rather than repeating the identical angle everywhere.
+- Density lives inside the phone, sparsity outside: the screenshot inside the device frame can be rich and busy, but outside the device keep to the headline, supporting copy, and a few deliberate accents. Do not recreate UI complexity on the canvas around the phone.
 
-Headlines are short, 3-6 words, fontSize 32-46 at width 80-90, set in high contrast against the background. Supporting copy is fontSize 18-24.
+Headlines are short - 3-5 words per line, one or two lines (see Copywriting) - fontSize 32-46 at width 80-90, set in high contrast against the background. Supporting copy is fontSize 18-24.
 
 ${brandRule}
 

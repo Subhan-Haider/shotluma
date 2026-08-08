@@ -48,6 +48,74 @@ describe('AI prompt branding', () => {
   })
 })
 
+describe('AI prompt copywriting', () => {
+  it('frames screenshots as ads selling one idea per slide', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('Screenshots are advertisements, not documentation')
+    expect(instructions).toContain('One idea per headline')
+    expect(instructions).toContain('3-5 words per line')
+    expect(instructions).toContain('break lines intentionally')
+  })
+
+  it('teaches the three headline types with benefit-first examples', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('Paint a moment')
+    expect(instructions).toContain('State an outcome')
+    expect(instructions).toContain('Kill a pain')
+    expect(instructions).toContain('"Track habits and stay motivated" -> "Keep your streak alive"')
+  })
+
+  it('keeps the copywriting rules available in edit mode', () => {
+    const instructions = buildInstructions({ targetSlideId: 'slide-1' })
+
+    expect(instructions).toContain('One idea per headline')
+  })
+})
+
+describe('AI prompt story arc', () => {
+  it('assigns slide roles from hero to feature wall in generate mode', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('STORY ARC')
+    expect(instructions).toContain('the ONLY slide most people ever see')
+    expect(instructions).toContain('differentiator')
+    expect(instructions).toContain('one core feature per slide, most important first')
+    expect(instructions).toContain('feature wall')
+  })
+
+  it('concentrates social proof on the hero slide', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('concentrate it here instead of sprinkling it across the set')
+  })
+
+  it('does not impose the story arc on single-slide edits', () => {
+    const instructions = buildInstructions({ targetSlideId: 'slide-1' })
+
+    expect(instructions).not.toContain('STORY ARC')
+  })
+})
+
+describe('AI prompt thumbnail test', () => {
+  it('requires judging each preview at store-thumbnail size', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('THUMBNAIL TEST')
+    expect(instructions).toContain('~160px-wide store thumbnail')
+    expect(instructions).toContain('in under one second')
+  })
+})
+
+describe('AI prompt density', () => {
+  it('keeps density inside the phone and sparsity outside', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('Density lives inside the phone, sparsity outside')
+  })
+})
+
 describe('AI prompt space usage', () => {
   it('demands the composition fill the tall canvas and flags dead zones as defects', () => {
     const instructions = buildInstructions()
