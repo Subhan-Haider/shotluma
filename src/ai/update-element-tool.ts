@@ -72,6 +72,7 @@ const updateElementSchema = z.object({
   screenTheme: screenThemeSchema.optional(),
   tiltX: z.number().optional().describe('Device elements only, -12 to 12.'),
   tiltY: z.number().optional().describe('Device elements only, -18 to 18.'),
+  spansScreens: z.boolean().optional().describe('Device elements only. When true the mockup continues seamlessly onto the adjacent screens, straddling the screen boundary.'),
   shadow: z.number().optional().describe('Text, device, image, or shape elements, 0-100.'),
   borderRadius: z.number().optional().describe('Text elements 0-40; image elements 0-100.'),
   shape: shapeSchema.optional().describe('Shape elements only.'),
@@ -167,6 +168,7 @@ const addTypeFields = (
       ['tiltX', fields.tiltX === undefined ? undefined : clampTiltX(fields.tiltX)],
       ['tiltY', fields.tiltY === undefined ? undefined : clampTiltY(fields.tiltY)],
       ['shadow', fields.shadow === undefined ? undefined : clampShadow(fields.shadow)],
+      ['spansScreens', fields.spansScreens],
     ])
   }
   if (elementType === 'image') {

@@ -458,6 +458,7 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 
 .canvas-item { position: absolute; transform-origin: center; touch-action: none; cursor: grab; z-index: 1; }
 .canvas-item.is-locked { cursor: not-allowed; }
+.canvas-item--span-ghost { pointer-events: none; }
 .canvas-item:active { cursor: grabbing; }
 .canvas-text { width: 100%; white-space: pre-line; overflow-wrap: break-word; font-synthesis: style; text-rendering: geometricPrecision; }
 .canvas-text[data-editing='true'] { cursor: text; user-select: text; outline: 1px dashed rgba(45, 106, 255, .55); outline-offset: 3px; }

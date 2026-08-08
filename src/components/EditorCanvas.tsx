@@ -1,28 +1,14 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { photoMockups } from '../mockups/catalog'
+import { DRAG_MAX, getDragMaxX, getDragMinX, getDragMinY } from '../editor/drag-bounds'
+import { getSpanGhosts } from '../editor/screen-span'
 import { clamp, getBackgroundPatternStyle, getBackgroundStyle } from '../utils'
 import { AiCursorOverlay } from './AiCursorOverlay'
-import { CanvasItem } from './CanvasElementView'
+import { CanvasItem, SpanGhostItem } from './CanvasElementView'
 import { ChevronLeft, ChevronRight, Copy, CursorMagicSelection02, Plus, StartUp02, Trash2 } from './icons'
 import { Button } from './ui/button'
 import type { CanvasElement, Slide } from '../types'
 
 type AiActivity = { tool: string; slideId?: string; x?: number; y?: number; seq: number }
-
-const DEFAULT_DRAG_MIN = -35
-const DRAG_MAX = 97
-const DEVICE_VISIBLE_EDGE = 3
-const ARTBOARD_ASPECT_RATIO = 1290 / 2796
-
-const getDragMinX = (element: CanvasElement) => element.type === 'device'
-  ? Math.min(DEFAULT_DRAG_MIN, DEVICE_VISIBLE_EDGE - element.width)
-  : DEFAULT_DRAG_MIN
-
-const getDragMinY = (element: CanvasElement) => {
-  if (element.type !== 'device') return DEFAULT_DRAG_MIN
-  const height = element.width * ARTBOARD_ASPECT_RATIO / photoMockups[element.deviceStyle].canvasAspectRatio
-  return Math.min(DEFAULT_DRAG_MIN, DEVICE_VISIBLE_EDGE - height)
-}
 
 type Interaction = {
   type: 'drag' | 'resize' | 'rotate'
@@ -149,7 +135,7 @@ export const EditorCanvas = ({
 
     if (current.type === 'drag') {
       const minDx = Math.max(...current.elements.map((item) => getDragMinX(item) - item.x))
-      const maxDx = Math.min(...current.elements.map((item) => DRAG_MAX - item.x))
+      const maxDx = Math.min(...current.elements.map((item) => getDragMaxX(item) - item.x))
       const minDy = Math.max(...current.elements.map((item) => getDragMinY(item) - item.y))
       const maxDy = Math.min(...current.elements.map((item) => DRAG_MAX - item.y))
       let nextDx = clamp(dx, minDx, maxDx)
@@ -283,6 +269,9 @@ export const EditorCanvas = ({
                           onBeginRotate={(event, item) => begin('rotate', event, slide.id, item)}
                           onCommitText={(patch) => onCommitText(slide.id, element.id, patch)}
                         />
+                      ))}
+                      {getSpanGhosts(slides, index).map(({ element }) => (
+                        <SpanGhostItem key={`span-ghost-${element.id}`} element={element} />
                       ))}
                       {snapGuides?.slideId === slide.id && snapGuides.vertical && <div className="snap-guide snap-guide--vertical" data-editor-overlay aria-hidden="true" />}
                       {snapGuides?.slideId === slide.id && snapGuides.horizontal && <div className="snap-guide snap-guide--horizontal" data-editor-overlay aria-hidden="true" />}

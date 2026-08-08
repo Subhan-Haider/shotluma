@@ -54,6 +54,8 @@ Every artboard is rendered as a 330 px-wide DOM element with the aspect ratio `1
 
 Export scales that DOM representation to the selected output size. This has one important consequence: text `fontSize` values are CSS pixels on the 330 px internal artboard. They are not percentages and are not export-resolution pixels.
 
+A device mockup with `spansScreens` enabled is additionally rendered inside the adjacent artboards as a non-interactive ghost (`SpanGhostItem`), shifted by exactly one artboard width (±100%, `src/editor/screen-span.ts`). App Store screenshots sit flush against each other, so the editor's visual gap between artboards must never offset ghosts. Because export rasterizes the same DOM, both halves stay aligned across exported screens without a separate export path. Drag and nudge bounds for spanning devices are widened by one screen in `src/editor/drag-bounds.ts`.
+
 Typical internal font sizes are:
 
 - Hero headline: `32–46`

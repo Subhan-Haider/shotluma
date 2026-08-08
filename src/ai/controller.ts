@@ -37,7 +37,7 @@ const TYPE_UPDATE_KEYS: Record<CanvasElement['type'], Set<string>> = {
     'underline', 'strikethrough', 'textTransform', 'backgroundColor', 'backgroundOpacity', 'padding', 'borderRadius',
     'strokeColor', 'strokeWidth', 'shadow', 'shadowColor',
   ]),
-  device: new Set(['deviceStyle', 'screenshot', 'screenTheme', 'tiltX', 'tiltY', 'shadow']),
+  device: new Set(['deviceStyle', 'screenshot', 'screenTheme', 'tiltX', 'tiltY', 'shadow', 'spansScreens']),
   image: new Set(['src', 'borderRadius', 'shadow']),
   shape: new Set(['shape', 'color', 'strokeColor', 'strokeWidth', 'shadow']),
   icon: new Set(['icon', 'color', 'strokeWidth', 'shadow']),

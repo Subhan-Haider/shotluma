@@ -12,6 +12,7 @@ import {
   Copy,
   ImagePlus,
   Italic,
+  LayoutTwoColumn,
   Lock,
   LockOpen,
   MonitorSmartphone,
@@ -393,6 +394,16 @@ const DeviceControls = ({ element, onUpdate, onUpload }: {
         {element.screenshot ? 'Replace screenshot' : 'Add screenshot'}
       </Button>
       <ToolbarRange label="Shadow" value={element.shadow} min={0} max={100} displayValue={`${Math.round(element.shadow)}%`} presets={percentPresets} onChange={(shadow) => onUpdate({ shadow })} />
+      <Button
+        variant={element.spansScreens ? 'secondary' : 'ghost'}
+        size="icon-sm"
+        onClick={() => onUpdate({ spansScreens: !element.spansScreens })}
+        title="Continue across neighboring screens"
+        aria-label="Continue across neighboring screens"
+        aria-pressed={element.spansScreens === true}
+      >
+        <LayoutTwoColumn size={15} />
+      </Button>
     </>
   )
 }

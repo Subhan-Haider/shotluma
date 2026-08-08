@@ -26,6 +26,69 @@ const slides: Slide[] = [
   },
 ]
 
+describe('EditorCanvas spanning mockups', () => {
+  it('renders a non-interactive ghost of a spanning mockup on the neighboring screen', () => {
+    const spanningSlides: Slide[] = [
+      {
+        id: 'slide-one',
+        name: 'Hook',
+        background: { type: 'solid', color1: '#ffffff', color2: '#ffffff', angle: 0 },
+        elements: [{
+          id: 'device-1',
+          type: 'device',
+          x: 60,
+          y: 18,
+          width: 70,
+          rotation: -8,
+          opacity: 1,
+          deviceStyle: 'iphone-17-a',
+          screenTheme: 'coral',
+          tiltX: 0,
+          tiltY: 0,
+          shadow: 55,
+          spansScreens: true,
+        }],
+      },
+      {
+        id: 'slide-two',
+        name: 'Story',
+        background: { type: 'solid', color1: '#ffffff', color2: '#ffffff', angle: 0 },
+        elements: [],
+      },
+    ]
+    const markup = renderToStaticMarkup(
+      <EditorCanvas
+        slides={spanningSlides}
+        activeSlideId="slide-one"
+        selectedElementIds={[]}
+        exporting={false}
+        zoom={1}
+        onSetActiveSlide={() => undefined}
+        onSelectElement={() => undefined}
+        onUpdateElements={() => undefined}
+        onCommitText={() => undefined}
+        onCheckpoint={() => undefined}
+        onAddSlide={() => undefined}
+        onDuplicateSlide={() => undefined}
+        onDeleteSlide={() => undefined}
+        onMoveSlide={() => undefined}
+        onEditSlideWithAi={() => undefined}
+        onGenerateWithAi={() => undefined}
+      />,
+    )
+    const root = document.createElement('div')
+    root.innerHTML = markup
+
+    expect(root.querySelectorAll('#artboard-slide-one .canvas-item--span-ghost').length).toBe(0)
+    const ghost = root.querySelector<HTMLElement>('#artboard-slide-two .canvas-item--span-ghost')
+    expect(ghost).not.toBeNull()
+    expect(ghost?.style.left).toBe('-40%')
+    expect(ghost?.style.transform).toBe('rotate(-8deg)')
+    expect(ghost?.getAttribute('aria-hidden')).toBe('true')
+    expect(ghost?.hasAttribute('data-element-id')).toBe(false)
+  })
+})
+
 describe('EditorCanvas screen actions', () => {
   it('groups AI editing with the other contextual screen actions', () => {
     const markup = renderToStaticMarkup(

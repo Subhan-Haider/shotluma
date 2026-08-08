@@ -69,6 +69,8 @@ export type DeviceElement = BaseElement & {
   tiltX: number
   tiltY: number
   shadow: number
+  /** Render a continuation of this mockup on adjacent screens so it straddles the boundary. */
+  spansScreens?: boolean
 }
 
 export type ImageElement = BaseElement & {

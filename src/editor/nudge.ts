@@ -1,3 +1,4 @@
+import { DRAG_MAX, getDragMaxX, getDragMinX, getDragMinY } from './drag-bounds'
 import type { CanvasElement } from '../types'
 
 export type ElementUpdate = {
@@ -14,10 +15,10 @@ export const getNudgeUpdates = (
   const movable = elements.filter((element) => selectedIds.has(element.id) && !element.locked)
   if (movable.length === 0) return []
 
-  const minX = Math.max(...movable.map((element) => -35 - element.x))
-  const maxX = Math.min(...movable.map((element) => 97 - element.x))
-  const minY = Math.max(...movable.map((element) => -35 - element.y))
-  const maxY = Math.min(...movable.map((element) => 97 - element.y))
+  const minX = Math.max(...movable.map((element) => getDragMinX(element) - element.x))
+  const maxX = Math.min(...movable.map((element) => getDragMaxX(element) - element.x))
+  const minY = Math.max(...movable.map((element) => getDragMinY(element) - element.y))
+  const maxY = Math.min(...movable.map((element) => DRAG_MAX - element.y))
   const x = Math.max(minX, Math.min(maxX, delta.x))
   const y = Math.max(minY, Math.min(maxY, delta.y))
 

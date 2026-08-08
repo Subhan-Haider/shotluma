@@ -16,8 +16,10 @@ export default defineConfig({
         'src/ai/richtext.ts',
         'src/ai/run-log.ts',
         'src/app/project-utils.ts',
+        'src/editor/drag-bounds.ts',
         'src/editor/element-utils.ts',
         'src/editor/nudge.ts',
+        'src/editor/screen-span.ts',
         'src/editor/slide-operations.ts',
       ],
       thresholds: {

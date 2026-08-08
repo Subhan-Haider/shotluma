@@ -26,6 +26,7 @@ import {
   Italic as ItalicIcon,
   KimiAiIcon,
   Layers as Layers3Icon,
+  LayoutTwoColumnIcon,
   Lock as LockIcon,
   LockKeyhole as LockKeyholeIcon,
   LockOpen as LockOpenIcon,
@@ -89,6 +90,7 @@ export const ImagePlus = createIcon(ImagePlusIcon)
 export const Italic = createIcon(ItalicIcon)
 export const KimiAi = createIcon(KimiAiIcon)
 export const Layers3 = createIcon(Layers3Icon)
+export const LayoutTwoColumn = createIcon(LayoutTwoColumnIcon)
 export const Lock = createIcon(LockIcon)
 export const LockKeyhole = createIcon(LockKeyholeIcon)
 export const LockOpen = createIcon(LockOpenIcon)

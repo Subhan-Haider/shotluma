@@ -220,6 +220,27 @@ export const ElementContent = ({ element }: { element: CanvasElement }) => {
   return <ShapeGraphic element={element} />
 }
 
+const getCanvasItemStyle = (element: CanvasElement): CSSProperties => ({
+  left: `${element.x}%`,
+  top: `${element.y}%`,
+  width: `${element.width}%`,
+  opacity: element.opacity,
+  transform: `rotate(${element.rotation}deg)`,
+})
+
+// A non-interactive continuation of a spanning mockup owned by a neighboring
+// screen. It mirrors CanvasItem's positioning exactly so the two halves line
+// up seamlessly across the shared artboard edge, in the editor and in exports.
+export const SpanGhostItem = ({ element }: { element: CanvasElement }) => (
+  <div
+    className={`canvas-item canvas-item--${element.type} canvas-item--span-ghost`}
+    style={getCanvasItemStyle(element)}
+    aria-hidden="true"
+  >
+    <ElementContent element={element} />
+  </div>
+)
+
 type CanvasItemProps = {
   element: CanvasElement
   selected: boolean
@@ -292,11 +313,7 @@ export const CanvasItem = ({ element, selected, showTransformHandles, exporting,
   }
 
   const style: CSSProperties = {
-    left: `${element.x}%`,
-    top: `${element.y}%`,
-    width: `${element.width}%`,
-    opacity: element.opacity,
-    transform: `rotate(${element.rotation}deg)`,
+    ...getCanvasItemStyle(element),
     zIndex: selected ? 80 : undefined,
   }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getNudgeUpdates } from './nudge'
-import type { ShapeElement } from '../types'
+import type { DeviceElement, ShapeElement } from '../types'
 
 const shape = (overrides: Partial<ShapeElement> = {}): ShapeElement => ({
   id: 'shape-1',
@@ -45,6 +45,30 @@ describe('getNudgeUpdates', () => {
     expect(updates).toEqual([
       { id: 'left', patch: { x: -33, y: 97 } },
       { id: 'right', patch: { x: 97, y: 27 } },
+    ])
+  })
+
+  it('lets a spanning device travel onto the neighboring screen', () => {
+    const spanningDevice: DeviceElement = {
+      id: 'device-1',
+      type: 'device',
+      x: 96,
+      y: 20,
+      width: 70,
+      rotation: -8,
+      opacity: 1,
+      deviceStyle: 'iphone-17-a',
+      screenTheme: 'coral',
+      tiltX: 0,
+      tiltY: 0,
+      shadow: 55,
+      spansScreens: true,
+    }
+
+    const updates = getNudgeUpdates([spanningDevice], ['device-1'], { x: 10, y: 0 })
+
+    expect(updates).toEqual([
+      { id: 'device-1', patch: { x: 106, y: 20 } },
     ])
   })
 
