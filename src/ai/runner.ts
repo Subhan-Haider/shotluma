@@ -1,6 +1,7 @@
 import {
   APICallError,
   isStepCount,
+  smoothStream,
   streamText,
   type FinishReason,
   type ModelMessage,
@@ -285,6 +286,22 @@ const collectStreamPart = <TOOLS extends ToolSet>(options: {
   }
 }
 
+/**
+ * Releases assistant prose and reasoning one word at a time.
+ *
+ * Thinking models emit reasoning in large blocks — Gemini often a whole paragraph
+ * per chunk — so the run band would otherwise jump a paragraph at a time instead of
+ * reading as a stream. The transform sits downstream of step execution and flushes
+ * its buffer the moment a non-prose part (a tool call) arrives, so the pacing shapes
+ * only what the band renders and never holds up the run.
+ *
+ * 18ms is a little under typical model output speed, which keeps the crawl smooth
+ * without letting it fall behind the model.
+ */
+export const NARRATION_WORD_DELAY_MS = 18
+
+export const narrationSmoothing = () => smoothStream<ToolSet>({ delayInMs: NARRATION_WORD_DELAY_MS })
+
 const openAiGenerationStream = (options: {
   model: Awaited<ReturnType<typeof createAiModel>>
   selection: AiModelSelection
@@ -324,6 +341,7 @@ const openAiGenerationStream = (options: {
       ...(signal ? { abortSignal: signal } : {}),
     }),
     stopWhen: isStepCount(64),
+    experimental_transform: narrationSmoothing(),
     ...requestOptions,
     // Anthropic caches nothing without explicit breakpoints; keep one moving
     // breakpoint on the last message so every step reuses the whole prefix.
