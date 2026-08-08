@@ -32,6 +32,7 @@ import {
   type AiRunToolCall,
 } from './run-log'
 import { saveAiRunReport } from './run-log-client'
+import { parsePlanInput, type PlannedScreen } from './run-plan'
 import { createEditorTools } from './tools'
 import type { AiToolActivity } from './tools'
 
@@ -42,6 +43,8 @@ export type AiRunEvent =
   | { type: 'tool'; name: string; detail: string }
   | { type: 'text'; delta: string }
   | { type: 'reasoning'; delta: string }
+  | { type: 'plan'; screens: PlannedScreen[] }
+  | { type: 'slide-started'; index: number }
   | { type: 'done'; summary: string; slidesCreated: number }
   | { type: 'error'; message: string }
 
@@ -51,21 +54,35 @@ type UserContent =
 
 const truncate = (value: string, max: number) => (value.length > max ? `${value.slice(0, max)}…` : value)
 
+/** Tools whose activity line never depends on their input. */
+const STATIC_TOOL_DETAILS: Record<string, string> = {
+  get_canvas_state: 'Canvas state retrieved',
+  add_slide: 'New screen created',
+  set_slide_background: 'Background updated',
+  delete_slide: 'Screen deleted',
+  add_image: 'Image added',
+  set_device_screenshot: 'Device screenshot replaced',
+  update_element: 'Element updated',
+  delete_element: 'Element deleted',
+  inspect_slide: 'Layout measured',
+  render_slide_preview: 'Preview checked',
+  remove_asset_background: 'Overlay background removed',
+}
+
 const describeToolCall = (toolName: string, input: unknown): string => {
+  const staticDetail = STATIC_TOOL_DETAILS[toolName]
+  if (staticDetail !== undefined) return staticDetail
+
   const data = (input && typeof input === 'object' ? (input as Record<string, unknown>) : {})
   switch (toolName) {
-    case 'get_canvas_state':
-      return 'Canvas state retrieved'
-    case 'add_slide':
-      return 'New screen created'
+    case 'declare_plan': {
+      const count = parsePlanInput(input).length
+      return count > 0 ? `Plan declared: ${count} screens` : 'Plan declared'
+    }
     case 'rename_slide':
       return typeof data['name'] === 'string'
         ? `Screen renamed: “${truncate(data['name'], 30)}”`
         : 'Screen renamed'
-    case 'set_slide_background':
-      return 'Background updated'
-    case 'delete_slide':
-      return 'Screen deleted'
     case 'add_text':
       return typeof data['text'] === 'string'
         ? `Text: “${truncate(data['text'], 30)}”`
@@ -78,26 +95,12 @@ const describeToolCall = (toolName: string, input: unknown): string => {
       return typeof data['shape'] === 'string'
         ? `Shape added (${data['shape']})`
         : 'Shape added'
-    case 'add_image':
-      return 'Image added'
-    case 'set_device_screenshot':
-      return 'Device screenshot replaced'
-    case 'update_element':
-      return 'Element updated'
-    case 'delete_element':
-      return 'Element deleted'
-    case 'inspect_slide':
-      return 'Layout measured'
-    case 'render_slide_preview':
-      return 'Preview checked'
     case 'create_overlay_asset':
       return typeof data['name'] === 'string'
         ? `Overlay asset: “${truncate(data['name'], 30)}”`
         : typeof data['prompt'] === 'string'
           ? `Overlay asset: “${truncate(data['prompt'], 30)}”`
           : 'Overlay asset generated'
-    case 'remove_asset_background':
-      return 'Overlay background removed'
     default:
       return `Tool: ${toolName}`
   }
@@ -251,7 +254,14 @@ const collectStreamPart = <TOOLS extends ToolSet>(options: {
       onEvent({ type: 'reasoning', delta: part.text })
       break
     case 'tool-call': {
-      if (part.toolName === 'add_slide') accumulator.slidesCreated += 1
+      if (part.toolName === 'declare_plan') {
+        const screens = parsePlanInput(part.input)
+        if (screens.length > 0) onEvent({ type: 'plan', screens })
+      }
+      if (part.toolName === 'add_slide') {
+        onEvent({ type: 'slide-started', index: accumulator.slidesCreated })
+        accumulator.slidesCreated += 1
+      }
       const detail = describeToolCall(part.toolName, part.input)
       accumulator.toolCalls.push({
         name: part.toolName,

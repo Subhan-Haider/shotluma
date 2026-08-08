@@ -566,19 +566,15 @@ select:focus-visible {
   color: var(--foreground);
 }
 
-.photo-perspective-note,
-.ai-modal-log {
+.photo-perspective-note {
   background: var(--primary);
   color: var(--primary-foreground);
   border-radius: var(--radius-md);
 }
 
-.photo-perspective-note > svg,
-.ai-modal-log-entry--tool { color: var(--primary-foreground); }
+.photo-perspective-note > svg { color: var(--primary-foreground); }
 
-.photo-perspective-note small,
-.ai-modal-log-entry,
-.ai-modal-log-entry--spinner { color: color-mix(in oklch, var(--primary-foreground) 68%, transparent); }
+.photo-perspective-note small { color: color-mix(in oklch, var(--primary-foreground) 68%, transparent); }
 
 .panel-footer {
   border-color: var(--border);
@@ -679,12 +675,39 @@ select:focus-visible {
 
 .toast button { color: var(--muted-foreground); }
 .ai-modal-overlay { background: oklch(0 0 0 / 35%); }
-.ai-modal-overlay--live { background: transparent; backdrop-filter: none; }
 .ai-modal-card {
   background: var(--background);
   border-color: var(--border);
   border-radius: var(--radius-xl);
   box-shadow: 0 24px 60px oklch(0 0 0 / 22%);
+}
+
+.ai-run-band {
+  background: var(--background);
+  border-color: var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 18px 48px oklch(0 0 0 / 22%);
+}
+.ai-run-band__meta,
+.ai-run-band__rail { border-color: var(--border); }
+.ai-run-band__rail { background: color-mix(in oklch, var(--muted) 60%, var(--background)); }
+.ai-run-band__kicker,
+.ai-run-band__rail b,
+.ai-run-band__meta small,
+.ai-run-band__line--waiting { color: var(--muted-foreground); }
+.ai-run-band__live { color: var(--foreground); }
+.ai-run-band__live--error { color: var(--destructive); }
+.ai-run-band__line--past { color: color-mix(in oklch, var(--foreground) 42%, transparent); }
+.ai-run-band__line--reasoning { color: color-mix(in oklch, var(--foreground) 68%, transparent); }
+.ai-run-band__line--past.ai-run-band__line--reasoning { color: color-mix(in oklch, var(--foreground) 34%, transparent); }
+.ai-run-band__screen { color: color-mix(in oklch, var(--foreground) 72%, transparent); }
+.ai-run-band__screen i { background: color-mix(in oklch, var(--foreground) 14%, transparent); }
+.ai-run-band__screen--built i { background: color-mix(in oklch, var(--foreground) 26%, transparent); }
+.ai-run-band__screen--building { color: var(--foreground); }
+.ai-run-band__screen--planned { color: color-mix(in oklch, var(--foreground) 40%, transparent); }
+.ai-run-band__screen--planned i {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .ai-modal-header,

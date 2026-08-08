@@ -17,12 +17,19 @@ import {
   getResolvedAiProviderAvailability,
   type AiProviderAvailability,
 } from '../ai/provider-config'
+import {
+  appendNarrationDelta,
+  createNarrationState,
+  flushNarration,
+  type NarrationState,
+} from '../ai/run-narration'
 import { runAiGeneration, type AiRunEvent, type AiToolActivity } from '../ai/runner'
 import { fileToDataUrl, uid } from '../utils'
 import { filterAcceptedImageFiles } from './ai-modal-image-files'
 import { shouldCloseAiModalOnKeydown } from './ai-modal-keyboard'
 import { AiApiKeysDialog } from './AiApiKeysDialog'
 import { AiProviderControls } from './AiProviderControls'
+import { AiRunBand } from './AiRunBand'
 import { CopyCodingPromptButton } from './CopyCodingPrompt'
 import { AiGenerative, Plus, Upload, X } from './icons'
 import { Button } from './ui/button'
@@ -30,9 +37,9 @@ import { Input } from './ui/input'
 import { Switch } from './ui/switch'
 import { Textarea } from './ui/textarea'
 import type { AiEditorController } from '../ai/controller'
+import type { PlannedScreen } from '../ai/run-plan'
 
 type ImageDraft = { id: string; file: File; name: string; dataUrl: string }
-type LogEntry = { kind: 'status' | 'tool'; text: string }
 type RunPhase = 'idle' | 'running' | 'done' | 'error'
 
 const toImageDrafts = async (files: File[], idPrefix: 'logo' | 'shot'): Promise<ImageDraft[]> =>
@@ -303,73 +310,7 @@ const IdleContent = ({
   </>
 )
 
-const RunningContent = ({
-  log,
-  logRef,
-  reasoningTail,
-  assistantText,
-}: {
-  log: LogEntry[]
-  logRef: RefObject<HTMLDivElement | null>
-  reasoningTail: string
-  assistantText: string
-}) => (
-  <div className="ai-modal-run">
-    <div className="ai-modal-log" ref={logRef}>
-      {log.map((entry, index) => (
-        <div
-          className={`ai-modal-log-entry ai-modal-log-entry--${entry.kind}`}
-          key={`${entry.kind}-${index}`}
-        >
-          {entry.text}
-        </div>
-      ))}
-      <div className="ai-modal-log-entry ai-modal-log-entry--spinner">
-        <span className="ai-modal-spinner" />
-        {reasoningTail ? `Thinking … ${reasoningTail}` : 'Generating …'}
-      </div>
-    </div>
-    {assistantText && <p className="ai-modal-assistant-text">{assistantText}</p>}
-  </div>
-)
-
-const ResultContent = ({
-  phase,
-  doneInfo,
-  isEditMode,
-  assistantText,
-  errorMessage,
-}: {
-  phase: RunPhase
-  doneInfo: { summary: string; slidesCreated: number } | null
-  isEditMode: boolean
-  assistantText: string
-  errorMessage: string | null
-}) => {
-  if (phase === 'done' && doneInfo) {
-    return (
-      <div className="ai-modal-result ai-modal-result--done">
-        <p>
-          {isEditMode
-            ? 'Screen updated.'
-            : `Done: ${doneInfo.slidesCreated} ${doneInfo.slidesCreated === 1 ? 'screen' : 'screens'} created.`}
-        </p>
-        {(doneInfo.summary || assistantText) && (
-          <p className="ai-modal-assistant-text">
-            {doneInfo.summary || assistantText}
-          </p>
-        )}
-      </div>
-    )
-  }
-  if (phase === 'error') {
-    return <div className="ai-modal-result ai-modal-result--error"><p>{errorMessage}</p></div>
-  }
-  return null
-}
-
 const ModalFooter = ({
-  phase,
   isEditMode,
   canGenerate,
   selection,
@@ -379,11 +320,7 @@ const ModalFooter = ({
   onReasoningEffortChange,
   onManageKeys,
   onGenerate,
-  onCancel,
-  onClose,
-  onRetry,
 }: {
-  phase: RunPhase
   isEditMode: boolean
   canGenerate: boolean
   selection: AiModelSelection
@@ -393,53 +330,27 @@ const ModalFooter = ({
   onReasoningEffortChange: (reasoningEffort: NonNullable<AiModelSelection['reasoningEffort']>) => void
   onManageKeys: (providerId: AiProviderId) => void
   onGenerate: () => void
-  onCancel: () => void
-  onClose: () => void
-  onRetry: () => void
-}) => {
-  if (phase === 'idle') {
-    return (
-      <>
-        <AiProviderControls
-          selection={selection}
-          availability={availability}
-          transportAvailability={transportAvailability}
-          onModelSelect={onModelSelect}
-          onReasoningEffortChange={onReasoningEffortChange}
-          onManageKeys={onManageKeys}
-        />
-        <Button
-          type="button"
-          className="export-button ai-modal-generate"
-          onClick={onGenerate}
-          disabled={!canGenerate}
-        >
-          <AiGenerative size={16} data-icon="inline-start" />
-          <b>{isEditMode ? 'Edit' : 'Generate'}</b>
-        </Button>
-      </>
-    )
-  }
-  if (phase === 'running') {
-    return (
-      <Button type="button" variant="outline" className="ai-modal-btn-secondary" onClick={onCancel}>
-        Cancel
-      </Button>
-    )
-  }
-  if (phase === 'done') {
-    return (
-      <Button type="button" className="export-button ai-modal-generate" onClick={onClose}>
-        <b>Close</b>
-      </Button>
-    )
-  }
-  return (
-    <Button type="button" variant="outline" className="ai-modal-btn-secondary" onClick={onRetry}>
-      Try again
+}) => (
+  <>
+    <AiProviderControls
+      selection={selection}
+      availability={availability}
+      transportAvailability={transportAvailability}
+      onModelSelect={onModelSelect}
+      onReasoningEffortChange={onReasoningEffortChange}
+      onManageKeys={onManageKeys}
+    />
+    <Button
+      type="button"
+      className="export-button ai-modal-generate"
+      onClick={onGenerate}
+      disabled={!canGenerate}
+    >
+      <AiGenerative size={16} data-icon="inline-start" />
+      <b>{isEditMode ? 'Edit' : 'Generate'}</b>
     </Button>
-  )
-}
+  </>
+)
 
 export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrepareRun, onFinished, onActivity }: AiGenerateModalProps) => {
   const [appName, setAppName] = useState('')
@@ -447,9 +358,11 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
   const [logo, setLogo] = useState<ImageDraft | null>(null)
   const [screenshots, setScreenshots] = useState<ImageDraft[]>([])
   const [phase, setPhase] = useState<RunPhase>('idle')
-  const [log, setLog] = useState<LogEntry[]>([])
   const [assistantText, setAssistantText] = useState('')
-  const [reasoningTail, setReasoningTail] = useState('')
+  const [narration, setNarration] = useState<NarrationState>(createNarrationState)
+  const [plan, setPlan] = useState<PlannedScreen[]>([])
+  const [slidesBuilt, setSlidesBuilt] = useState(0)
+  const [toolCallCount, setToolCallCount] = useState(0)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [doneInfo, setDoneInfo] = useState<{ summary: string; slidesCreated: number } | null>(null)
   const [selection, setSelection] = useState<AiModelSelection>(INITIAL_AI_SELECTION)
@@ -464,16 +377,8 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
 
   const logoInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const logRef = useRef<HTMLDivElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const cancelledRef = useRef(false)
-
-  useEffect(() => {
-    // Scroll only the log container itself — scrollIntoView would cancel the canvas
-    // stage's smooth follow-scroll while the AI is working.
-    const node = logRef.current
-    if (node) node.scrollTop = node.scrollHeight
-  }, [log, assistantText])
 
   const requestClose = () => {
     if (phase === 'running' || keysDialogOpen) return
@@ -540,21 +445,25 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
 
   const handleEvent = (event: AiRunEvent) => {
     if (cancelledRef.current) return
-    if (event.type === 'status') setLog((current) => [...current, { kind: 'status', text: event.message }])
-    else if (event.type === 'tool') {
-      setLog((current) => [...current, { kind: 'tool', text: `${event.name}: ${event.detail}` }])
-      setReasoningTail('')
-    } else if (event.type === 'text') {
+    if (event.type === 'tool') setToolCallCount((current) => current + 1)
+    else if (event.type === 'plan') setPlan(event.screens)
+    // `index` is the count of screens finished before this one, which is exactly the
+    // rail's "built" count while this screen is in progress.
+    else if (event.type === 'slide-started') setSlidesBuilt(event.index)
+    else if (event.type === 'text') {
       setAssistantText((current) => current + event.delta)
-      setReasoningTail('')
+      setNarration((current) => appendNarrationDelta(current, 'text', event.delta))
     } else if (event.type === 'reasoning') {
-      setReasoningTail((current) => (current + event.delta).slice(-160))
+      setNarration((current) => appendNarrationDelta(current, 'reasoning', event.delta))
     } else if (event.type === 'done') {
+      setNarration(flushNarration)
+      setSlidesBuilt(event.slidesCreated)
       setDoneInfo({ summary: event.summary, slidesCreated: event.slidesCreated })
       setPhase('done')
       onActivity?.(null)
       onFinished(event.slidesCreated)
-    } else {
+    } else if (event.type === 'error') {
+      setNarration(flushNarration)
       setErrorMessage(event.message)
       setPhase('error')
       onActivity?.(null)
@@ -573,9 +482,11 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
     const abortController = new AbortController()
     abortControllerRef.current = abortController
     cancelledRef.current = false
-    setLog([])
     setAssistantText('')
-    setReasoningTail('')
+    setNarration(createNarrationState())
+    setPlan([])
+    setSlidesBuilt(0)
+    setToolCallCount(0)
     setErrorMessage(null)
     setDoneInfo(null)
     setPhase('running')
@@ -608,10 +519,28 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
     setPhase('idle')
   }
 
+  if (phase !== 'idle') {
+    return (
+      <AiRunBand
+        phase={phase}
+        {...(targetSlide ? { targetName: targetSlide.name } : {})}
+        narration={narration}
+        plan={plan}
+        slidesBuilt={slidesBuilt}
+        toolCallCount={toolCallCount}
+        summary={doneInfo?.summary.trim() ? doneInfo.summary : assistantText}
+        errorMessage={errorMessage}
+        onCancel={handleCancel}
+        onClose={requestClose}
+        onRetry={handleRetry}
+      />
+    )
+  }
+
   return (
     <>
       <div
-        className={`ai-modal-overlay${phase !== 'idle' ? ' ai-modal-overlay--live' : ''}`}
+        className="ai-modal-overlay"
         onMouseDown={(event) => { if (event.target === event.currentTarget) requestClose() }}
       >
         <div className="ai-modal-card" role="dialog" aria-modal="true" aria-label={isEditMode ? 'Edit screen with AI' : 'Generate with AI'}>
@@ -623,55 +552,36 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
                 {targetSlide && <span>{targetSlide.name}</span>}
               </div>
             </div>
-            <button className="ai-modal-close" onClick={requestClose} disabled={phase === 'running'} aria-label="Close"><X size={16} /></button>
+            <button className="ai-modal-close" onClick={requestClose} aria-label="Close"><X size={16} /></button>
           </div>
 
           <div className="ai-modal-body">
-            {phase === 'idle' && (
-              <IdleContent
-                isEditMode={isEditMode}
-                appName={appName}
-                description={description}
-                logo={logo}
-                screenshots={screenshots}
-                enableOverlayAssets={enableOverlayAssets && availability.openai}
-                overlayAssetsAvailable={availability.openai}
-                logoInputRef={logoInputRef}
-                fileInputRef={fileInputRef}
-                onAppNameChange={setAppName}
-                onDescriptionChange={setDescription}
-                onLogoFiles={(files) => {
-                  void handleLogoFiles(files)
-                }}
-                onRemoveLogo={() => setLogo(null)}
-                onScreenshotFiles={(files) => {
-                  void handleScreenshotFiles(files)
-                }}
-                onRemoveScreenshot={removeScreenshot}
-                onEnableOverlayAssetsChange={setEnableOverlayAssets}
-              />
-            )}
-
-            {phase === 'running' && (
-              <RunningContent
-                log={log}
-                logRef={logRef}
-                reasoningTail={reasoningTail}
-                assistantText={assistantText}
-              />
-            )}
-            <ResultContent
-              phase={phase}
-              doneInfo={doneInfo}
+            <IdleContent
               isEditMode={isEditMode}
-              assistantText={assistantText}
-              errorMessage={errorMessage}
+              appName={appName}
+              description={description}
+              logo={logo}
+              screenshots={screenshots}
+              enableOverlayAssets={enableOverlayAssets && availability.openai}
+              overlayAssetsAvailable={availability.openai}
+              logoInputRef={logoInputRef}
+              fileInputRef={fileInputRef}
+              onAppNameChange={setAppName}
+              onDescriptionChange={setDescription}
+              onLogoFiles={(files) => {
+                void handleLogoFiles(files)
+              }}
+              onRemoveLogo={() => setLogo(null)}
+              onScreenshotFiles={(files) => {
+                void handleScreenshotFiles(files)
+              }}
+              onRemoveScreenshot={removeScreenshot}
+              onEnableOverlayAssetsChange={setEnableOverlayAssets}
             />
           </div>
 
-          <div className={`ai-modal-footer${phase === 'idle' ? ' ai-modal-footer--idle' : ''}`}>
+          <div className="ai-modal-footer ai-modal-footer--idle">
             <ModalFooter
-              phase={phase}
               isEditMode={isEditMode}
               canGenerate={canGenerate}
               selection={selection}
@@ -683,9 +593,6 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
               }}
               onManageKeys={handleManageKeys}
               onGenerate={() => void handleGenerate()}
-              onCancel={handleCancel}
-              onClose={requestClose}
-              onRetry={handleRetry}
             />
           </div>
         </div>

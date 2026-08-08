@@ -2,6 +2,7 @@ import { createAddIconTool } from './icon-tool'
 import { createInspectionTools } from './inspection-tools'
 import { createMediaTools } from './media-tools'
 import { createOverlayAssetTools } from './overlay-asset-tools'
+import { createDeclarePlanTool } from './plan-tool'
 import { createSlideTools } from './slide-tools'
 import { createAddTextTool } from './text-tool'
 import {
@@ -51,6 +52,7 @@ export function createEditorTools(
     ...editTools,
     add_slide: addSlide,
     delete_slide: deleteSlide,
+    declare_plan: createDeclarePlanTool(context),
   }
 }
 

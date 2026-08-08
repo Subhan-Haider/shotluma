@@ -39,6 +39,7 @@ The model mutates the editor only through the tools composed by `src/ai/tools.ts
 - Icons: the model places Hugeicons via `add_icon` and updates them via `update_element` (fields: `icon`, `color`, `strokeWidth`, `shadow`). The curated icon library lives in `src/icons.ts`. The model must NEVER use emoji characters on canvas; always use `add_icon` instead.
 - Keep `inspect_slide` and `render_slide_preview` as the visual correction loop.
 - Keep edit mode scoped to its target slide.
+- `declare_plan` is the one generate-mode tool that mutates nothing: it reports the intended screen set to the run band before the first `add_slide`. Keep it out of edit mode, and keep it advisory — never gate slide creation on it.
 - Overlay assets (opt-in via the generate modal): `create_overlay_asset` calls OpenAI `gpt-image-2` through the AI SDK `generateImage` API and registers the result with `AiEditorController.addAsset`. Because `gpt-image-2` cannot emit transparency, generation always uses a flat `#FF00FF` chroma-key backdrop (`src/ai/overlay-asset-prompt.ts`). `remove_asset_background` then strips that key in-browser via Canvas (`src/ai/remove-chroma-key-background.ts`, pure pixel math in `src/ai/chroma-key.ts`) and registers a transparent PNG. The key color is measured per image with `detectChromaKey` rather than assumed to be `#FF00FF` — the model only approximates the requested backdrop, and keying against the nominal color leaves the whole background half-transparent (a pink haze). Keep the ramp wide, keep the despill pass, and keep reporting `backgroundCleared` so a failed key is visible instead of silently shipping a hazy asset. Do not use these tools for mockups, device frames, or full screens — only cutout elements placed with `add_image`. Require a resolved OpenAI key (browser storage or local-dev `VITE_OPENAI_API_KEY`) even when the chat model uses another provider. Never log generated image payloads.
 - Overlay generation is budgeted: `OVERLAY_ASSET_BUDGET` in `src/ai/overlay-asset-prompt.ts` caps `create_overlay_asset` calls per run, counted per `createOverlayAssetTools` instance and consumed by failed attempts too, so a retry loop cannot burn the OpenAI key. The prompt section in `src/ai/prompt.ts` and the tool descriptions must keep stating the same number — read it from the constant rather than hardcoding it.
 
@@ -62,6 +63,16 @@ Clear selection before generation and preview capture. Any live overlay must car
 Rich text comes from structured highlights through `src/ai/richtext.ts`. The model never writes raw HTML. `sanitizeRichText` remains the final whitelist.
 
 The stream runner reports errors and aborts as events instead of rejecting. Preserve visible reasoning progress for long-running reasoning models.
+
+## Run band
+
+While a run is live, the editor shows `src/components/AiRunBand.tsx` — a floating band over the canvas, not the shrunken generate dialog. The band owns three invariants:
+
+- **Prose over tool calls.** Assistant text is the backbone and reasoning fills the gaps between its sentences, both at reading size. Tool calls appear only as a count. Do not reintroduce a visible tool log: repeated `update_element` lines crowd out the one thing the canvas cannot show, which is why the model made a choice.
+- **Sentences, not character windows.** `src/ai/run-narration.ts` accumulates both streams into whole sentences and keeps the last `VISIBLE_SENTENCE_COUNT`, so the band never grows a scroll area and two steps never collide into one line. Slicing a raw character window instead reproduces the mid-sentence truncation this replaced.
+- **The plan is advisory.** `declare_plan` (`src/ai/plan-tool.ts`) reports intent only; it creates nothing. `reconcilePlan` in `src/ai/run-plan.ts` projects it onto the screens actually built, appends unplanned ones, and always keeps an in-progress entry while the run is live. A run that builds more or fewer screens than announced must not make the rail claim it finished early.
+
+In edit mode there is one target screen and no plan, so the rail is omitted and the band renders narrow. The run band is also the result and error surface — a finished run stays in place instead of handing back to the centered dialog.
 
 Reasoning-effort choices belong to the model catalog. Offer only values supported by the selected model (never a provider-default option) and default to `high` when the model supports it, otherwise `medium`. Pass portable efforts through the AI SDK's top-level `reasoning` option. OpenAI GPT-5.6 (Luna/Terra/Sol) and Moonshot/Kimi K3 also offer `max`, which the runner sends via OpenAI-compat `providerOptions.openai.reasoningEffort` because the shared SDK option has no `max`. Do not duplicate provider-specific effort mapping in the UI. The generate modal exposes one model picker grouped by provider; reasoning effort appears as secondary chips only when the selected model supports it.
 

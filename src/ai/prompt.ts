@@ -26,7 +26,8 @@ export function buildInstructions(options: AiPromptOptions = {}): string {
    - Palette: background, text color, one accent. Be confident - a saturated brand color or a rich dark tone as a full-bleed background almost always beats a timid neutral. Take cues from the app's own screenshots, logo, and subject.
    - One font pairing (a display face for headlines, a quieter face for supporting copy) and ONE highlight treatment.
    - A composition plan: assign every slide an archetype from the library below. No two adjacent slides may use the same archetype, and a set should use at least 3 different ones.
-5. Build each slide following its archetype - emit its full planned composition as ONE batched turn (see "Batch your tool calls") - then run the verify routine below before moving on to the next slide.`
+5. Call declare_plan once the composition plan is fixed and BEFORE the first add_slide, listing the screens in build order with a short name and role each. The editor shows these to the user while the screens are still empty, so the names should read like screen labels ("Hero", "Ritual"), not sentences.
+6. Build each slide following its archetype - emit its full planned composition as ONE batched turn (see "Batch your tool calls") - then run the verify routine below before moving on to the next slide.`
   const layoutContext = targetSlideId
     ? 'Use these archetypes only as optional composition references when the requested edit calls for layout changes. Do not force a new archetype onto an otherwise focused edit.'
     : `STORY ARC - assign each slide a role before assigning it an archetype:

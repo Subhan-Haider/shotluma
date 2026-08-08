@@ -213,6 +213,17 @@ describe('AI prompt batching', () => {
     expect(instructions).toContain('emit its full planned composition as ONE batched turn')
   })
 
+  it('asks the model to declare its screen plan before building', () => {
+    const instructions = buildInstructions()
+
+    expect(instructions).toContain('Call declare_plan once the composition plan is fixed')
+    expect(instructions).toContain('BEFORE the first add_slide')
+  })
+
+  it('does not ask for a screen plan in edit mode', () => {
+    expect(buildInstructions({ targetSlideId: 'slide-1' })).not.toContain('declare_plan')
+  })
+
   it('instructs a batched final pass in generate mode', () => {
     const instructions = buildInstructions()
 

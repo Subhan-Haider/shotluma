@@ -122,6 +122,8 @@ The AI feature is split into explicit layers:
 | `src/ai/chroma-key.ts` | Pure soft chroma-key pixel math for overlay cutouts |
 | `src/ai/remove-chroma-key-background.ts` | Canvas wrapper that exports transparent PNGs |
 | `src/ai/overlay-asset-prompt.ts` | Hard chroma-key constraints appended to overlay prompts, plus the per-run generation budget |
+| `src/ai/run-narration.ts` | Sentence-wise accumulation of the assistant and reasoning streams |
+| `src/ai/run-plan.ts` | Declared screen plan reconciled against the screens actually built |
 | `src/ai/tool-context.ts` | Shared clamps, lookups, activity, and measurements |
 | `src/ai/tool-schemas.ts` | Shared model-visible schemas and descriptions |
 | `src/ai/controller.ts` | Allowed editor reads and mutations |
@@ -137,6 +139,8 @@ The model does not receive unrestricted application access. It can only use the 
 Mutating tools return measured element bounds and layout warnings. The model can also inspect a full slide and request a rendered preview. These results close the gap between requested coordinates and the browser's actual layout.
 
 Rich text is built from structured highlight input. The model never writes raw HTML. `sanitizeRichText` in `src/utils.ts` is the final whitelist for allowed span styles.
+
+The generate dialog covers input only. Once a run starts it closes and `src/components/AiRunBand.tsx` takes over as a band floating over the canvas: assistant prose and reasoning at reading size (accumulated per sentence by `src/ai/run-narration.ts`), a screen rail fed by the model's `declare_plan` call and reconciled against reality by `src/ai/run-plan.ts`, and an action count in place of a tool log. The band is also where a finished or failed run reports its result, so no run hands control back to the centered dialog.
 
 `src/ai/provider-catalog.ts` owns the selectable providers, models, transport metadata, and model-specific reasoning-effort choices. `src/ai/provider-config.ts` resolves keys from browser `localStorage` (API keys dialog) with optional `.env.local` `VITE_*` fallback, and `src/ai/runner.ts` lazily loads the selected native AI SDK provider. The runner passes portable efforts through the AI SDK's standardized `reasoning` option so each native provider can map it to its own API; OpenAI GPT-5.6 and Moonshot/Kimi K3 `max` go through OpenAI-compat `providerOptions` because the shared option has no `max`. The generate modal presents one model picker grouped by provider, with reasoning effort as secondary chips when the model supports it, plus an API keys dialog when a provider is unconfigured. Requests go directly from the local browser to Google, Alibaba/Qwen, OpenAI, Anthropic, xAI, or OpenRouter. Moonshot uses the OpenAI chat provider through the only Vite proxy route.
 
