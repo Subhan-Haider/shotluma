@@ -12,7 +12,7 @@ The prompt in `src/ai/prompt.ts` instructs the model to batch independent tool c
 
 ## Security and provider boundary
 
-The browser uses the AI SDK's native Google, Alibaba/Qwen, OpenAI, Anthropic, and xAI providers directly. Moonshot uses the OpenAI chat provider through the local `/api/moonshot` CORS proxy.
+The browser uses the AI SDK's native Google, Alibaba/Qwen, OpenAI, Anthropic, and xAI providers directly. OpenRouter is called directly through the OpenAI chat provider against `https://openrouter.ai/api/v1`. Moonshot uses the OpenAI chat provider through the local `/api/moonshot` CORS proxy.
 
 - Provider keys are entered in the browser (AI generate modal → API keys) and stored unencrypted in `localStorage` under `shotluma-ai-provider-keys`. Optional `.env.local` `VITE_*` values work only through the local dev server and merge underneath browser keys. Production builds must replace every provider env value with an empty string.
 - Keys are intentionally visible to same-origin browser JavaScript. Never commit `.env.local`, reuse a shared production credential, or weaken the production build boundary. Recommend dedicated keys with restrictive quotas.
@@ -64,3 +64,5 @@ Rich text comes from structured highlights through `src/ai/richtext.ts`. The mod
 The stream runner reports errors and aborts as events instead of rejecting. Preserve visible reasoning progress for long-running reasoning models.
 
 Reasoning-effort choices belong to the model catalog. Offer only values supported by the selected model (never a provider-default option) and default to `high` when the model supports it, otherwise `medium`. Pass portable efforts through the AI SDK's top-level `reasoning` option. OpenAI GPT-5.6 (Luna/Terra/Sol) and Moonshot/Kimi K3 also offer `max`, which the runner sends via OpenAI-compat `providerOptions.openai.reasoningEffort` because the shared SDK option has no `max`. Do not duplicate provider-specific effort mapping in the UI. The generate modal exposes one model picker grouped by provider; reasoning effort appears as secondary chips only when the selected model supports it.
+
+OpenRouter is the only provider with a runtime model catalog (`src/ai/openrouter-models.ts`): the public `/models` endpoint is fetched without a key, filtered to models that accept image input and support tool calling — both are hard requirements for a Shotluma run — and cached in `localStorage` for an hour. Loaded models are registered with `setDynamicOpenRouterModels` so catalog lookups resolve them; unknown OpenRouter ids synthesize a minimal option instead of throwing, while every other provider keeps failing fast on unknown models. Keep the curated OpenRouter shortlist in `provider-catalog.ts` working as the fetch fallback, keep the vision+tools filter intact, and offer reasoning effort only when the fetched model advertises the `reasoning` parameter.

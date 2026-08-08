@@ -1,5 +1,6 @@
 import { APP_LOGO_URL, APP_NAME } from '../brand'
 import {
+  AiGenerative,
   AlertCircle,
   Check,
   ChevronDown,
@@ -9,7 +10,6 @@ import {
   Plus,
   Redo2,
   Save,
-  StartUp02,
   Trash2,
   Undo2,
 } from '../components/icons'
@@ -276,7 +276,7 @@ export function AppHeader({
             onClick={onOpenAi}
             disabled={aiDisabled}
           >
-            <span className="ai-generate-button-mark" aria-hidden="true"><StartUp02 size={14} /></span>
+            <span className="ai-generate-button-mark" aria-hidden="true"><AiGenerative size={14} /></span>
             <span>Generate with AI</span>
           </Button>
           <ExportMenu

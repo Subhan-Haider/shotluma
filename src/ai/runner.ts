@@ -189,6 +189,19 @@ const createAiModel = async (selection: AiModelSelection) => {
       const { createXai } = await import('@ai-sdk/xai')
       return createXai({ apiKey })(selection.model)
     }
+    case 'openrouter': {
+      const { createOpenAI } = await import('@ai-sdk/openai')
+      // OpenRouter speaks the OpenAI chat-completions dialect and allows
+      // browser CORS; the optional headers attribute traffic to the app.
+      return createOpenAI({
+        apiKey,
+        baseURL: 'https://openrouter.ai/api/v1',
+        headers: {
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Shotluma',
+        },
+      }).chat(selection.model)
+    }
   }
 }
 

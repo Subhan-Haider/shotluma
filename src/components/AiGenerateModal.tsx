@@ -24,7 +24,7 @@ import { shouldCloseAiModalOnKeydown } from './ai-modal-keyboard'
 import { AiApiKeysDialog } from './AiApiKeysDialog'
 import { AiProviderControls } from './AiProviderControls'
 import { CopyCodingPromptButton } from './CopyCodingPrompt'
-import { Plus, StartUp02, Upload, X } from './icons'
+import { AiGenerative, Plus, Upload, X } from './icons'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Switch } from './ui/switch'
@@ -414,7 +414,7 @@ const ModalFooter = ({
           onClick={onGenerate}
           disabled={!canGenerate}
         >
-          <StartUp02 size={16} data-icon="inline-start" />
+          <AiGenerative size={16} data-icon="inline-start" />
           <b>{isEditMode ? 'Edit' : 'Generate'}</b>
         </Button>
       </>
@@ -617,7 +617,7 @@ export const AiGenerateModal = ({ open, onClose, controller, targetSlide, onPrep
         <div className="ai-modal-card" role="dialog" aria-modal="true" aria-label={isEditMode ? 'Edit screen with AI' : 'Generate with AI'}>
           <div className="ai-modal-header">
             <div className="ai-modal-title">
-              <StartUp02 size={16} />
+              <AiGenerative size={16} />
               <div>
                 <h2>{isEditMode ? 'Edit screen with AI' : 'Generate with AI'}</h2>
                 {targetSlide && <span>{targetSlide.name}</span>}

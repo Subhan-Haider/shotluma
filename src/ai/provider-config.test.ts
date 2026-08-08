@@ -42,6 +42,7 @@ describe('AI provider configuration', () => {
       VITE_OPENAI_API_KEY: 'openai-key',
       VITE_ANTHROPIC_API_KEY: 'anthropic-key',
       VITE_XAI_API_KEY: ' xai-key ',
+      VITE_OPENROUTER_API_KEY: ' openrouter-key ',
     })).toEqual({
       moonshot: 'moonshot-key',
       google: 'google-key',
@@ -49,6 +50,7 @@ describe('AI provider configuration', () => {
       openai: 'openai-key',
       anthropic: 'anthropic-key',
       xai: 'xai-key',
+      openrouter: 'openrouter-key',
     })
   })
 
@@ -66,6 +68,7 @@ describe('AI provider configuration', () => {
       openai: 'openai-key',
       anthropic: '',
       xai: '',
+      openrouter: '',
     })
     expect(getAiProviderAvailability(keys)).toEqual({
       moonshot: false,
@@ -74,6 +77,7 @@ describe('AI provider configuration', () => {
       openai: true,
       anthropic: false,
       xai: false,
+      openrouter: false,
     })
   })
 
@@ -85,6 +89,7 @@ describe('AI provider configuration', () => {
       openai: true,
       anthropic: true,
       xai: true,
+      openrouter: true,
     })).toEqual({
       provider: 'openai',
       model: 'gpt-5.6-terra',
@@ -97,6 +102,20 @@ describe('AI provider configuration', () => {
       openai: false,
       anthropic: false,
       xai: false,
+      openrouter: true,
+    })).toEqual({
+      provider: 'openrouter',
+      model: 'anthropic/claude-sonnet-5',
+      reasoningEffort: 'high',
+    })
+    expect(getInitialAiSelection({
+      moonshot: false,
+      google: false,
+      qwen: false,
+      openai: false,
+      anthropic: false,
+      xai: false,
+      openrouter: false,
     })).toEqual({
       provider: 'moonshot',
       model: 'kimi-k3',
@@ -109,6 +128,7 @@ describe('AI provider configuration', () => {
       openai: false,
       anthropic: false,
       xai: false,
+      openrouter: false,
     })).toEqual({
       provider: 'moonshot',
       model: 'kimi-k3',
@@ -133,6 +153,7 @@ describe('AI provider configuration', () => {
       openai: 'browser-openai',
       anthropic: '',
       xai: '',
+      openrouter: '',
     })
   })
 

@@ -1,5 +1,7 @@
 import {
   Add01Icon,
+  AiGenerativeIcon,
+  AiNetworkIcon,
   AlignCenter as AlignCenterIcon,
   AlignLeft as AlignLeftIcon,
   AlignRight as AlignRightIcon,
@@ -65,6 +67,8 @@ const createIcon = (icon: IconSvgElement) => (props: IconProps) => (
 
 export const AlignCenter = createIcon(AlignCenterIcon)
 export const Add01 = createIcon(Add01Icon)
+export const AiGenerative = createIcon(AiGenerativeIcon)
+export const AiNetwork = createIcon(AiNetworkIcon)
 export const AlignLeft = createIcon(AlignLeftIcon)
 export const AlignRight = createIcon(AlignRightIcon)
 export const AlertCircle = createIcon(AlertCircleIcon)

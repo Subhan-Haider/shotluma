@@ -1,4 +1,11 @@
-export type AiProviderId = 'moonshot' | 'google' | 'qwen' | 'openai' | 'anthropic' | 'xai'
+export type AiProviderId =
+  | 'moonshot'
+  | 'google'
+  | 'qwen'
+  | 'openai'
+  | 'anthropic'
+  | 'xai'
+  | 'openrouter'
 
 export type AiReasoningEffort =
   | 'minimal'
@@ -77,6 +84,13 @@ const MOONSHOT_REASONING_EFFORTS = [
   'low',
   'high',
   'max',
+] as const satisfies readonly AiReasoningEffort[]
+
+/** OpenRouter normalizes `reasoning_effort` per routed model: low / medium / high. */
+export const OPENROUTER_REASONING_EFFORTS = [
+  'low',
+  'medium',
+  'high',
 ] as const satisfies readonly AiReasoningEffort[]
 
 export const AI_PROVIDERS: readonly AiProviderOption[] = [
@@ -218,6 +232,47 @@ export const AI_PROVIDERS: readonly AiProviderOption[] = [
       },
     ],
   },
+  {
+    id: 'openrouter',
+    label: 'OpenRouter',
+    envVar: 'VITE_OPENROUTER_API_KEY',
+    transport: 'direct',
+    // Curated recommendations; the full vision+tools catalog is fetched at
+    // runtime (src/ai/openrouter-models.ts) and this list doubles as the
+    // offline fallback when that fetch fails.
+    models: [
+      {
+        id: 'anthropic/claude-sonnet-5',
+        label: 'Claude Sonnet 5',
+        description: 'Recommended · balanced quality and cost',
+        reasoningEfforts: OPENROUTER_REASONING_EFFORTS,
+      },
+      {
+        id: 'openai/gpt-5.6-terra',
+        label: 'GPT-5.6 Terra',
+        description: 'Balanced quality and cost',
+        reasoningEfforts: OPENROUTER_REASONING_EFFORTS,
+      },
+      {
+        id: 'google/gemini-3.6-flash',
+        label: 'Gemini 3.6 Flash',
+        description: 'Fast and cost-efficient',
+        reasoningEfforts: OPENROUTER_REASONING_EFFORTS,
+      },
+      {
+        id: 'qwen/qwen3.7-plus',
+        label: 'Qwen 3.7 Plus',
+        description: 'Flagship vision model',
+        reasoningEfforts: OPENROUTER_REASONING_EFFORTS,
+      },
+      {
+        id: 'moonshotai/kimi-k3',
+        label: 'Kimi K3',
+        description: 'Kimi K3 without the local CORS proxy',
+        reasoningEfforts: OPENROUTER_REASONING_EFFORTS,
+      },
+    ],
+  },
 ]
 
 export const DEFAULT_AI_SELECTION: AiModelSelection = {
@@ -228,6 +283,37 @@ export const DEFAULT_AI_SELECTION: AiModelSelection = {
 
 export const isAiProviderId = (value: unknown): value is AiProviderId =>
   typeof value === 'string' && AI_PROVIDERS.some((provider) => provider.id === value)
+
+/**
+ * OpenRouter models discovered at runtime (src/ai/openrouter-models.ts).
+ * Registered here so catalog lookups resolve dynamic selections; the static
+ * catalog stays the source of truth for every other provider.
+ */
+let dynamicOpenRouterModels: readonly AiModelOption[] = []
+
+export const setDynamicOpenRouterModels = (
+  models: readonly AiModelOption[],
+): void => {
+  dynamicOpenRouterModels = models
+}
+
+export const getDynamicOpenRouterModels = (): readonly AiModelOption[] =>
+  dynamicOpenRouterModels
+
+const findOpenRouterModel = (modelId: string): AiModelOption | undefined =>
+  getAiProvider('openrouter').models.find((option) => option.id === modelId)
+  ?? dynamicOpenRouterModels.find((option) => option.id === modelId)
+
+/**
+ * A dynamic selection may outlive the fetched catalog (e.g. the model list is
+ * still loading); synthesize a minimal option so lookups never throw for the
+ * dynamic provider. Reasoning support is unknown, so no effort is offered.
+ */
+const synthesizeOpenRouterModel = (modelId: string): AiModelOption => ({
+  id: modelId,
+  label: modelId,
+  description: 'OpenRouter model',
+})
 
 export const getAiProvider = (providerId: AiProviderId): AiProviderOption => {
   const provider = AI_PROVIDERS.find((option) => option.id === providerId)
@@ -242,6 +328,10 @@ export const getDefaultAiModel = (providerId: AiProviderId): AiModelOption => {
 }
 
 export const getAiModel = (selection: AiModelSelection): AiModelOption => {
+  if (selection.provider === 'openrouter') {
+    return findOpenRouterModel(selection.model)
+      ?? synthesizeOpenRouterModel(selection.model)
+  }
   const model = getAiProvider(selection.provider).models.find(
     (option) => option.id === selection.model,
   )
@@ -257,6 +347,10 @@ export const findAiModelById = (
   for (const provider of AI_PROVIDERS) {
     const model = provider.models.find((option) => option.id === modelId)
     if (model) return { provider, model }
+  }
+  const dynamicModel = dynamicOpenRouterModels.find((option) => option.id === modelId)
+  if (dynamicModel) {
+    return { provider: getAiProvider('openrouter'), model: dynamicModel }
   }
   throw new Error(`Unknown AI model: ${modelId}`)
 }

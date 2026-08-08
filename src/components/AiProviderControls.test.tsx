@@ -40,12 +40,17 @@ const availableTransports = {
   openai: true,
   anthropic: true,
   xai: true,
+  openrouter: true,
 }
 
 vi.mock('./ui/button', () => ({
   Button: ({ children, ...props }: ComponentProps<'button'>) => (
     <button {...props}>{children}</button>
   ),
+}))
+
+vi.mock('./ui/input', () => ({
+  Input: (props: ComponentProps<'input'>) => <input {...props} />,
 }))
 
 describe('AI provider controls', () => {
@@ -64,6 +69,7 @@ describe('AI provider controls', () => {
           openai: false,
           anthropic: false,
           xai: false,
+          openrouter: false,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -89,6 +95,7 @@ describe('AI provider controls', () => {
           openai: false,
           anthropic: true,
           xai: true,
+          openrouter: true,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -121,6 +128,7 @@ describe('AI provider controls', () => {
           openai: true,
           anthropic: false,
           xai: false,
+          openrouter: false,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -152,6 +160,7 @@ describe('AI provider controls', () => {
           openai: false,
           anthropic: false,
           xai: false,
+          openrouter: false,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -170,6 +179,35 @@ describe('AI provider controls', () => {
     expect(moonshotMarkup).toContain('Moonshot · Kimi K3')
   })
 
+  it('shows an "Other models" entry in the OpenRouter group', () => {
+    const markup = renderToStaticMarkup(
+      <AiProviderControls
+        selection={{
+          provider: 'openrouter',
+          model: 'anthropic/claude-sonnet-5',
+          reasoningEffort: 'high',
+        }}
+        availability={{
+          moonshot: false,
+          google: false,
+          qwen: false,
+          openai: false,
+          anthropic: false,
+          xai: false,
+          openrouter: true,
+        }}
+        transportAvailability={availableTransports}
+        onModelSelect={() => undefined}
+        onReasoningEffortChange={() => undefined}
+        onManageKeys={() => undefined}
+      />,
+    )
+
+    expect(markup).toContain('OpenRouter · Claude Sonnet 5')
+    expect(markup).toContain('Other models…')
+    expect(markup).not.toContain('All OpenRouter models')
+  })
+
   it('explains when the Moonshot proxy is unavailable instead of asking for a key', () => {
     const markup = renderToStaticMarkup(
       <AiProviderControls
@@ -181,6 +219,7 @@ describe('AI provider controls', () => {
           openai: false,
           anthropic: false,
           xai: false,
+          openrouter: false,
         }}
         transportAvailability={{ ...availableTransports, moonshot: false }}
         onModelSelect={() => undefined}

@@ -21,6 +21,7 @@ type AiProviderEnvironment = {
   VITE_OPENAI_API_KEY?: unknown
   VITE_ANTHROPIC_API_KEY?: unknown
   VITE_XAI_API_KEY?: unknown
+  VITE_OPENROUTER_API_KEY?: unknown
 }
 
 export const AI_PROVIDER_KEYS_STORAGE_KEY = 'shotluma-ai-provider-keys'
@@ -37,6 +38,7 @@ export const createEmptyAiProviderKeys = (): AiProviderKeys => ({
   openai: '',
   anthropic: '',
   xai: '',
+  openrouter: '',
 })
 
 export const createAiProviderKeys = (
@@ -48,6 +50,7 @@ export const createAiProviderKeys = (
   openai: readKey(environment.VITE_OPENAI_API_KEY),
   anthropic: readKey(environment.VITE_ANTHROPIC_API_KEY),
   xai: readKey(environment.VITE_XAI_API_KEY),
+  openrouter: readKey(environment.VITE_OPENROUTER_API_KEY),
 })
 
 export const getAiProviderAvailability = (
@@ -59,6 +62,7 @@ export const getAiProviderAvailability = (
   openai: keys.openai.length > 0,
   anthropic: keys.anthropic.length > 0,
   xai: keys.xai.length > 0,
+  openrouter: keys.openrouter.length > 0,
 })
 
 const getBrowserHostname = (): string => {
@@ -86,6 +90,7 @@ export const getAiProviderTransportAvailability = (
   openai: true,
   anthropic: true,
   xai: true,
+  openrouter: true,
 })
 
 export const mergeAiProviderKeys = (
@@ -222,6 +227,7 @@ export const ENVIRONMENT_AI_PROVIDER_KEYS = createAiProviderKeys({
   VITE_OPENAI_API_KEY: import.meta.env.VITE_OPENAI_API_KEY,
   VITE_ANTHROPIC_API_KEY: import.meta.env.VITE_ANTHROPIC_API_KEY,
   VITE_XAI_API_KEY: import.meta.env.VITE_XAI_API_KEY,
+  VITE_OPENROUTER_API_KEY: import.meta.env.VITE_OPENROUTER_API_KEY,
 })
 
 export const AI_PROVIDER_AVAILABILITY = getResolvedAiProviderAvailability()

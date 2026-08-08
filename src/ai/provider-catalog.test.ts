@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   AI_PROVIDERS,
   DEFAULT_AI_SELECTION,
+  OPENROUTER_REASONING_EFFORTS,
   clampAiReasoningEffort,
   findAiModelById,
   getAiModel,
@@ -9,7 +10,9 @@ import {
   getAiSdkReasoningEffort,
   getAiStreamReasoningOptions,
   getDefaultAiModel,
+  getDynamicOpenRouterModels,
   isAiProviderId,
+  setDynamicOpenRouterModels,
   toAiSdkReasoningEffort,
 } from './provider-catalog'
 
@@ -22,6 +25,7 @@ describe('AI provider catalog', () => {
       'openai',
       'anthropic',
       'xai',
+      'openrouter',
     ])
     expect(AI_PROVIDERS.map((provider) => provider.envVar)).toEqual([
       'VITE_MOONSHOT_API_KEY',
@@ -30,6 +34,7 @@ describe('AI provider catalog', () => {
       'VITE_OPENAI_API_KEY',
       'VITE_ANTHROPIC_API_KEY',
       'VITE_XAI_API_KEY',
+      'VITE_OPENROUTER_API_KEY',
     ])
     expect(AI_PROVIDERS.filter((provider) => provider.transport === 'proxy').map(
       (provider) => provider.id,
@@ -65,6 +70,46 @@ describe('AI provider catalog', () => {
       model: getAiModel({ provider: 'openai', model: 'gpt-5.6-sol' }),
     })
     expect(() => findAiModelById('not-a-model')).toThrow('Unknown AI model')
+  })
+
+  it('resolves OpenRouter models dynamically without breaking static providers', () => {
+    setDynamicOpenRouterModels([])
+    // Curated shortlist resolves like any static provider.
+    expect(getAiModel({ provider: 'openrouter', model: 'anthropic/claude-sonnet-5' }).label)
+      .toBe('Claude Sonnet 5')
+    // Unknown ids synthesize instead of throwing: a selection may be restored
+    // before the runtime catalog has loaded.
+    const synthesized = getAiModel({ provider: 'openrouter', model: 'vendor/new-model' })
+    expect(synthesized).toEqual({
+      id: 'vendor/new-model',
+      label: 'vendor/new-model',
+      description: 'OpenRouter model',
+    })
+    expect(() => findAiModelById('vendor/new-model')).toThrow('Unknown AI model')
+
+    const dynamicModel = {
+      id: 'vendor/new-model',
+      label: 'New Model',
+      description: '$1 in · $2 out per 1M tokens',
+      reasoningEfforts: OPENROUTER_REASONING_EFFORTS,
+    }
+    setDynamicOpenRouterModels([dynamicModel])
+    expect(getDynamicOpenRouterModels()).toEqual([dynamicModel])
+    expect(getAiModel({ provider: 'openrouter', model: 'vendor/new-model' })).toBe(dynamicModel)
+    expect(findAiModelById('vendor/new-model')).toEqual({
+      provider: getAiProvider('openrouter'),
+      model: dynamicModel,
+    })
+    expect(getAiSdkReasoningEffort({
+      provider: 'openrouter',
+      model: 'vendor/new-model',
+      reasoningEffort: 'xhigh',
+    })).toBe('high')
+    // Static providers keep failing fast.
+    expect(() => getAiModel({ provider: 'google', model: 'vendor/new-model' })).toThrow(
+      'Unknown google model',
+    )
+    setDynamicOpenRouterModels([])
   })
 
   it('clamps reasoning effort to the selected model and defaults to high', () => {

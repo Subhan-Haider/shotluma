@@ -14,12 +14,12 @@ Browser
 └── PNG/ZIP export
 
 Optional AI path
-Browser → AI SDK provider → Google / Qwen / OpenAI / Anthropic / xAI
+Browser → AI SDK provider → Google / Qwen / OpenAI / Anthropic / xAI / OpenRouter
 Browser → /api/moonshot/* → Vite proxy → Moonshot API
 Browser → /api/ai-run-logs → Vite → ./ai-logs/*.json (developer opt-in)
 ```
 
-The core editor has no backend requirement. The optional AI path uses bring-your-own keys entered in the browser (`localStorage`), with optional `.env.local` `VITE_*` fallback served only during local development. Production builds replace all provider env values with empty strings. Google, Qwen, OpenAI, Anthropic, and xAI are called directly; Moonshot is enabled only on localhost and uses a same-origin proxy because its API does not support the required browser CORS flow.
+The core editor has no backend requirement. The optional AI path uses bring-your-own keys entered in the browser (`localStorage`), with optional `.env.local` `VITE_*` fallback served only during local development. Production builds replace all provider env values with empty strings. Google, Qwen, OpenAI, Anthropic, xAI, and OpenRouter are called directly; Moonshot is enabled only on localhost and uses a same-origin proxy because its API does not support the required browser CORS flow.
 
 This public repository contains and deploys only the editor at
 `app.shotluma.com`. The marketing site at `shotluma.com` has a separate private
@@ -138,7 +138,9 @@ Mutating tools return measured element bounds and layout warnings. The model can
 
 Rich text is built from structured highlight input. The model never writes raw HTML. `sanitizeRichText` in `src/utils.ts` is the final whitelist for allowed span styles.
 
-`src/ai/provider-catalog.ts` owns the selectable providers, models, transport metadata, and model-specific reasoning-effort choices. `src/ai/provider-config.ts` resolves keys from browser `localStorage` (API keys dialog) with optional `.env.local` `VITE_*` fallback, and `src/ai/runner.ts` lazily loads the selected native AI SDK provider. The runner passes portable efforts through the AI SDK's standardized `reasoning` option so each native provider can map it to its own API; OpenAI GPT-5.6 and Moonshot/Kimi K3 `max` go through OpenAI-compat `providerOptions` because the shared option has no `max`. The generate modal presents one model picker grouped by provider, with reasoning effort as secondary chips when the model supports it, plus an API keys dialog when a provider is unconfigured. Requests go directly from the local browser to Google, Alibaba/Qwen, OpenAI, Anthropic, or xAI. Moonshot uses the OpenAI chat provider through the only Vite proxy route.
+`src/ai/provider-catalog.ts` owns the selectable providers, models, transport metadata, and model-specific reasoning-effort choices. `src/ai/provider-config.ts` resolves keys from browser `localStorage` (API keys dialog) with optional `.env.local` `VITE_*` fallback, and `src/ai/runner.ts` lazily loads the selected native AI SDK provider. The runner passes portable efforts through the AI SDK's standardized `reasoning` option so each native provider can map it to its own API; OpenAI GPT-5.6 and Moonshot/Kimi K3 `max` go through OpenAI-compat `providerOptions` because the shared option has no `max`. The generate modal presents one model picker grouped by provider, with reasoning effort as secondary chips when the model supports it, plus an API keys dialog when a provider is unconfigured. Requests go directly from the local browser to Google, Alibaba/Qwen, OpenAI, Anthropic, xAI, or OpenRouter. Moonshot uses the OpenAI chat provider through the only Vite proxy route.
+
+OpenRouter is the one provider with a runtime model catalog: `src/ai/openrouter-models.ts` fetches the public OpenRouter `/models` endpoint (no key required), keeps only models that accept image input and support tool calling, caches the result in `localStorage` for an hour, and registers it with the static catalog so selections resolve everywhere. The curated OpenRouter shortlist in `provider-catalog.ts` doubles as the offline fallback, and the model picker adds a searchable browser over the fetched catalog. Requests use the OpenAI chat provider against `https://openrouter.ai/api/v1`.
 
 Keys are intentionally browser-visible and stored unencrypted. Never commit `.env.local` or weaken the production-build stripping of provider env values. Use dedicated keys with restrictive quotas. A hosted deployment that must hide or share credentials needs an authenticated backend.
 

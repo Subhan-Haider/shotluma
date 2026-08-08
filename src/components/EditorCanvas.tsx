@@ -4,7 +4,7 @@ import { getSpanGhosts } from '../editor/screen-span'
 import { clamp, getBackgroundPatternStyle, getBackgroundStyle } from '../utils'
 import { AiCursorOverlay } from './AiCursorOverlay'
 import { CanvasItem, SpanGhostItem } from './CanvasElementView'
-import { ChevronLeft, ChevronRight, Copy, CursorMagicSelection02, Plus, StartUp02, Trash2 } from './icons'
+import { AiGenerative, ChevronLeft, ChevronRight, Copy, CursorMagicSelection02, Plus, Trash2 } from './icons'
 import { Button } from './ui/button'
 import type { CanvasElement, Slide } from '../types'
 
@@ -210,7 +210,7 @@ export const EditorCanvas = ({
                     onClick={onGenerateWithAi}
                     disabled={aiActionsDisabled}
                   >
-                    <StartUp02 size={16} />
+                    <AiGenerative size={16} />
                     Generate with AI
                   </Button>
                 </div>

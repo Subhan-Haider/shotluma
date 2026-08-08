@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   AI_PROVIDERS,
   AI_REASONING_EFFORT_LABELS,
@@ -10,6 +11,7 @@ import {
   type AiReasoningEffort,
 } from '../ai/provider-catalog'
 import {
+  AiNetwork,
   AlertCircle,
   ChatGpt,
   ChevronDown,
@@ -19,6 +21,7 @@ import {
   KimiAi,
   Qwen,
 } from './icons'
+import { OpenRouterModelBrowser } from './OpenRouterModelBrowser'
 import { Button } from './ui/button'
 import {
   Popover,
@@ -37,6 +40,13 @@ import {
 import type { AiProviderAvailability } from '../ai/provider-config'
 import type { ComponentType } from 'react'
 
+/**
+ * Sentinel entry in the OpenRouter select group: opens the searchable catalog
+ * browser instead of selecting a model. Real OpenRouter ids use `vendor/model`,
+ * so the `:` namespace cannot collide.
+ */
+const OPENROUTER_BROWSE_VALUE = 'openrouter:browse-all'
+
 const AI_PROVIDER_ICONS: Record<AiProviderId, ComponentType<{ className?: string; size?: number }>> = {
   moonshot: KimiAi,
   google: GoogleGemini,
@@ -44,6 +54,7 @@ const AI_PROVIDER_ICONS: Record<AiProviderId, ComponentType<{ className?: string
   openai: ChatGpt,
   anthropic: Claude,
   xai: Grok,
+  openrouter: AiNetwork,
 }
 
 export type AiProviderControlsProps = {
@@ -71,6 +82,7 @@ export const AiProviderControls = ({
   onReasoningEffortChange,
   onManageKeys,
 }: AiProviderControlsProps) => {
+  const [isBrowsingOpenRouter, setBrowsingOpenRouter] = useState(false)
   const provider = getAiProvider(selection.provider)
   const model = getAiModel(selection)
   const isConfigured = availability[selection.provider]
@@ -114,6 +126,11 @@ export const AiProviderControls = ({
             value={selection.model}
             onValueChange={(value) => {
               if (typeof value !== 'string') return
+              if (value === OPENROUTER_BROWSE_VALUE) {
+                setBrowsingOpenRouter(true)
+                return
+              }
+              setBrowsingOpenRouter(false)
               const match = findAiModelById(value)
               onModelSelect(match.provider.id, match.model.id)
             }}
@@ -148,12 +165,24 @@ export const AiProviderControls = ({
                         {modelOption.label}
                       </SelectItem>
                     ))}
+                    {option.id === 'openrouter' && (
+                      <SelectItem value={OPENROUTER_BROWSE_VALUE}>
+                        Other models…
+                      </SelectItem>
+                    )}
                   </SelectGroup>
                 )
               })}
             </SelectContent>
           </Select>
         </div>
+
+        {isBrowsingOpenRouter && (
+          <OpenRouterModelBrowser
+            selectedModelId={selection.model}
+            onModelSelect={(modelId) => onModelSelect('openrouter', modelId)}
+          />
+        )}
 
         {model.reasoningEfforts && reasoningEffort && (
           <div className="ai-model-picker-section">
