@@ -4,6 +4,29 @@ This public repository owns the editor deployed at
 `https://app.shotluma.com`. The marketing site at `https://shotluma.com` is
 maintained and deployed from a separate private repository.
 
+## GitHub Pages (SEO / project landing)
+
+A lightweight static landing page lives in `github-pages/` and deploys to
+`https://realzachi.github.io/shotluma/` via `.github/workflows/github-pages.yml`.
+
+It exists for discovery and backlinks: the page is indexable, points
+`rel="canonical"` at `https://shotluma.com/`, and links to the website, hosted
+editor, and GitHub repository. It is not the marketing site and must stay
+self-contained (no private marketing source, styles, or production config).
+
+Enable Pages once under **Settings → Pages → Build and deployment → GitHub
+Actions**, or with:
+
+```bash
+gh api -X POST repos/realZachi/shotluma/pages \
+  -f build_type=workflow \
+  -f 'source[branch]=main' \
+  -f 'source[path]=/'
+```
+
+After the first successful workflow run on `main`, the site is public at the
+URL above.
+
 ## Deploy
 
 ```bash

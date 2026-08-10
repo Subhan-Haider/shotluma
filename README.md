@@ -6,6 +6,7 @@ An AI-first, local-first canvas editor for creating complete iOS App Store scree
 
 [![Open the editor](https://img.shields.io/badge/%E2%96%B6%EF%B8%8E%20Open%20the%20editor-app.shotluma.com-2563eb?style=for-the-badge)](https://app.shotluma.com)
 [![Visit the website](https://img.shields.io/badge/Visit%20the%20website-shotluma.com-0f172a?style=for-the-badge)](https://shotluma.com)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-realzachi.github.io%2Fshotluma-64748b?style=for-the-badge)](https://realzachi.github.io/shotluma/)
 
 [![CI](https://github.com/realZachi/shotluma/actions/workflows/ci.yml/badge.svg)](https://github.com/realZachi/shotluma/actions/workflows/ci.yml)
 [![GitHub Release](https://img.shields.io/github/v/release/realZachi/shotluma?display_name=tag&sort=semver)](https://github.com/realZachi/shotluma/releases)
