@@ -20,10 +20,11 @@ export const createDeclarePlanTool = ({ emit }: ToolContext) => tool({
   execute: async ({ screens }) => {
     const planned = parsePlanInput({ screens })
     emit({ tool: 'declare_plan' })
+    const screenList = planned.map((s, i) => `${i + 1}. "${s.name}" — ${s.role}`).join('\n')
     return {
       ok: true as const,
       acknowledged: planned.length,
-      note: 'Plan recorded for the editor UI. Build the screens in this order.',
+      next_action: `NOW call add_slide immediately for screen 1 of ${planned.length}. Do NOT stop — you must build every screen before finishing. Build them in this order:\n${screenList}`,
     }
   },
 })

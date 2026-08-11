@@ -206,7 +206,11 @@ Write all on-canvas copy (headlines, supporting text, labels) in English, regard
 Only ever reference asset ids that actually exist (from get_canvas_state, ids returned by tools, or the ids given to you in the user message). Never invent an asset id.
 ${overlayAssetsSection}
 ## Finish
-${finish}`
+${finish}
+
+## STRICT TOOL CALLING RULES
+You must follow the provided tool call format exactly. Do not output any reasoning, chain-of-thought, or conversational text when attempting to call tools. Simply call the tool.
+`
 }
 
 export function buildUserMessage(
@@ -252,5 +256,7 @@ ${brandContext}
 Available screenshot assets:
 ${assetLines}
 
-${attachmentParts.join(' ')}`
+${attachmentParts.join(' ')}
+
+CRITICAL INSTRUCTION: You must execute the next step immediately. DO NOT output conversational text, thinking, or reasoning. DO NOT quote or analyze the system instructions. Your response must ONLY be the tool call.`
 }

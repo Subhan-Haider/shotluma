@@ -7,6 +7,7 @@ import {
   type ModelMessage,
   type TextStreamPart,
   type ToolSet,
+  type LanguageModel,
 } from 'ai'
 import { uid } from '../utils'
 import { runCodexAppServerGeneration } from './codex-app-server'
@@ -96,9 +97,10 @@ const createAiModel = async (selection: AiModelSelection) => {
   if (!getAiProviderTransportAvailability()[selection.provider]) {
     throw new Error('Moonshot requires the local Shotluma CORS proxy and is unavailable on this host')
   }
+  const provider = getAiProvider(selection.provider)
   const apiKey = getAiProviderKey(selection.provider)
-  if (!apiKey) {
-    throw new Error(`${getAiProvider(selection.provider).envVar} is not configured`)
+  if (!apiKey && provider.auth !== 'none' && provider.auth !== 'chatgpt') {
+    throw new Error(`${provider.envVar} is not configured`)
   }
 
   switch (selection.provider) {
@@ -148,6 +150,11 @@ const createAiModel = async (selection: AiModelSelection) => {
           'X-Title': 'Shotluma',
         },
       }).chat(selection.model)
+    }
+    case 'ollama': {
+      const { createOllama } = await import('ollama-ai-provider-v2')
+      const baseURL = apiKey || 'http://127.0.0.1:11434/api'
+      return createOllama({ baseURL }).chat(selection.model)
     }
   }
 }
@@ -296,7 +303,7 @@ const openAiGenerationStream = (options: {
   const requestOptions = buildStreamRequestOptions(selection, uid('shotluma-run'))
 
   return streamText({
-    model,
+    model: model as LanguageModel,
     instructions: buildInstructions({
       ...(targetSlideId ? { targetSlideId } : {}),
       ...(enableOverlayAssets ? { enableOverlayAssets: true } : {}),
@@ -308,6 +315,8 @@ const openAiGenerationStream = (options: {
       ...(enableOverlayAssets ? { enableOverlayAssets: true } : {}),
       ...(signal ? { abortSignal: signal } : {}),
     }),
+    toolChoice: selection.provider === 'ollama' ? 'auto' : 'required',
+    maxSteps: 64,
     stopWhen: isStepCount(64),
     experimental_transform: narrationSmoothing(),
     ...requestOptions,
@@ -363,6 +372,60 @@ const runCodexProviderGeneration = async (options: {
     ...(options.onActivity ? { onActivity: options.onActivity } : {}),
   })
 }
+const processOllamaPullLine = (line: string, modelName: string, onEvent: (event: AiRunEvent) => void) => {
+  try {
+    const parsed = JSON.parse(line) as { status?: string; total?: number; completed?: number }
+    if (parsed.total && parsed.completed) {
+      const percent = Math.round((parsed.completed / parsed.total) * 100)
+      onEvent({ type: 'tool', name: 'download', detail: `Downloading ${modelName} (${percent}%)…` })
+    } else if (parsed.status) {
+      onEvent({ type: 'tool', name: 'download', detail: parsed.status })
+    }
+  } catch {
+    // ignore parse errors
+  }
+}
+
+const ensureOllamaModelAvailable = async (modelName: string, baseURL: string, onEvent: (event: AiRunEvent) => void) => {
+  try {
+    const tagsRes = await fetch(`${baseURL}/tags`)
+    if (!tagsRes.ok) return
+    const tagsData = (await tagsRes.json()) as { models?: { name: string }[] }
+    const models = tagsData.models ?? []
+
+    const hasModel = models.some((m) => m.name === modelName || m.name === `${modelName}:latest`)
+    if (hasModel) return
+
+    onEvent({ type: 'tool', name: 'download', detail: `Downloading ${modelName}…` })
+
+    const pullRes = await fetch(`${baseURL}/pull`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: modelName, stream: true }),
+    })
+
+    if (!pullRes.ok || !pullRes.body) return
+
+    const reader = pullRes.body.getReader()
+    const decoder = new TextDecoder()
+
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      const chunk = decoder.decode(value, { stream: true })
+      const lines = chunk.split('\n').filter(Boolean)
+
+      for (const line of lines) {
+        processOllamaPullLine(line, modelName, onEvent)
+      }
+    }
+
+    onEvent({ type: 'tool', name: 'download', detail: `Finished downloading ${modelName}` })
+  } catch (error) {
+    console.warn('Failed to ensure Ollama model:', error)
+  }
+}
 
 const runDirectProviderGeneration = async (options: {
   selection: AiModelSelection
@@ -397,12 +460,19 @@ const runDirectProviderGeneration = async (options: {
   const provider = getAiProvider(selection.provider)
   const modelOption = getAiModel(selection)
   const reasoning = getAiSdkReasoningEffort(selection)
+
+  if (selection.provider === 'ollama') {
+    const apiKey = getAiProviderKey('ollama')
+    const baseURL = apiKey || 'http://127.0.0.1:11434/api'
+    await ensureOllamaModelAvailable(selection.model, baseURL, onEvent)
+  }
+
   const model = await createAiModel(selection)
   const content = buildUserContent({
     description,
-    screenshots,
+    screenshots: selection.provider === 'ollama' ? [] : screenshots,
     ...(appName !== undefined ? { appName } : {}),
-    ...(logo ? { logo } : {}),
+    ...(logo && selection.provider !== 'ollama' ? { logo } : {}),
     ...(targetSlideId ? { targetSlideId } : {}),
   })
 

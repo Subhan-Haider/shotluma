@@ -52,6 +52,7 @@ describe('AI provider configuration', () => {
       anthropic: 'anthropic-key',
       xai: 'xai-key',
       openrouter: 'openrouter-key',
+      ollama: '',
     })
   })
 
@@ -71,6 +72,7 @@ describe('AI provider configuration', () => {
       anthropic: '',
       xai: '',
       openrouter: '',
+      ollama: '',
     })
     expect(getAiProviderAvailability(keys)).toEqual({
       codex: false,
@@ -81,6 +83,7 @@ describe('AI provider configuration', () => {
       anthropic: false,
       xai: false,
       openrouter: false,
+      ollama: true,
     })
   })
 
@@ -94,10 +97,10 @@ describe('AI provider configuration', () => {
       anthropic: true,
       xai: true,
       openrouter: true,
+      ollama: true,
     })).toEqual({
-      provider: 'openai',
-      model: 'gpt-5.6-terra',
-      reasoningEffort: 'high',
+      provider: 'ollama',
+      model: 'llama3.1',
     })
     expect(getInitialAiSelection({
       codex: false,
@@ -108,6 +111,7 @@ describe('AI provider configuration', () => {
       anthropic: false,
       xai: false,
       openrouter: true,
+      ollama: false,
     })).toEqual({
       provider: 'openrouter',
       model: 'anthropic/claude-sonnet-5',
@@ -122,6 +126,7 @@ describe('AI provider configuration', () => {
       anthropic: false,
       xai: false,
       openrouter: false,
+      ollama: false,
     })).toEqual({
       provider: 'codex',
       model: 'codex/gpt-5.6-terra',
@@ -136,6 +141,7 @@ describe('AI provider configuration', () => {
       anthropic: false,
       xai: false,
       openrouter: false,
+      ollama: false,
     })).toEqual({
       provider: 'moonshot',
       model: 'kimi-k3',
@@ -162,6 +168,7 @@ describe('AI provider configuration', () => {
       anthropic: '',
       xai: '',
       openrouter: '',
+      ollama: '',
     })
   })
 

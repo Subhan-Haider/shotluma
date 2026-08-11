@@ -7,6 +7,7 @@ export type AiProviderId =
   | 'anthropic'
   | 'xai'
   | 'openrouter'
+  | 'ollama'
 
 export type AiReasoningEffort =
   | 'minimal'
@@ -37,7 +38,7 @@ export type AiProviderOption = {
   id: AiProviderId
   label: string
   envVar: string
-  auth: 'apiKey' | 'chatgpt'
+  auth: 'apiKey' | 'chatgpt' | 'none'
   transport: 'bridge' | 'direct' | 'proxy'
   models: readonly AiModelOption[]
 }
@@ -97,6 +98,25 @@ export const OPENROUTER_REASONING_EFFORTS = [
 ] as const satisfies readonly AiReasoningEffort[]
 
 export const AI_PROVIDERS: readonly AiProviderOption[] = [
+  {
+    id: 'ollama',
+    label: 'Ollama',
+    envVar: 'VITE_OLLAMA_BASE_URL',
+    auth: 'none',
+    transport: 'direct',
+    models: [
+      {
+        id: 'llama3.1',
+        label: 'Llama 3.1',
+        description: 'Recommended · requires model installation (run: ollama run llama3.1)',
+      },
+      {
+        id: 'qwen2.5-coder',
+        label: 'Qwen 2.5 Coder',
+        description: 'Excellent for code · requires model installation (run: ollama run qwen2.5-coder)',
+      },
+    ],
+  },
   {
     id: 'codex',
     label: 'Codex',
@@ -340,6 +360,17 @@ export const setDynamicOpenRouterModels = (
 export const getDynamicOpenRouterModels = (): readonly AiModelOption[] =>
   dynamicOpenRouterModels
 
+let dynamicOllamaModels: readonly AiModelOption[] = []
+
+export const setDynamicOllamaModels = (
+  models: readonly AiModelOption[],
+): void => {
+  dynamicOllamaModels = models
+}
+
+export const getDynamicOllamaModels = (): readonly AiModelOption[] =>
+  dynamicOllamaModels
+
 const findOpenRouterModel = (modelId: string): AiModelOption | undefined =>
   getAiProvider('openrouter').models.find((option) => option.id === modelId)
   ?? dynamicOpenRouterModels.find((option) => option.id === modelId)
@@ -372,9 +403,12 @@ export const getAiModel = (selection: AiModelSelection): AiModelOption => {
     return findOpenRouterModel(selection.model)
       ?? synthesizeOpenRouterModel(selection.model)
   }
-  const model = getAiProvider(selection.provider).models.find(
+  let model = getAiProvider(selection.provider).models.find(
     (option) => option.id === selection.model,
   )
+  if (!model && selection.provider === 'ollama') {
+    model = dynamicOllamaModels.find((option) => option.id === selection.model)
+  }
   if (!model) {
     throw new Error(`Unknown ${selection.provider} model: ${selection.model}`)
   }
@@ -391,6 +425,10 @@ export const findAiModelById = (
   const dynamicModel = dynamicOpenRouterModels.find((option) => option.id === modelId)
   if (dynamicModel) {
     return { provider: getAiProvider('openrouter'), model: dynamicModel }
+  }
+  const dynamicOllamaModel = dynamicOllamaModels.find((option) => option.id === modelId)
+  if (dynamicOllamaModel) {
+    return { provider: getAiProvider('ollama'), model: dynamicOllamaModel }
   }
   throw new Error(`Unknown AI model: ${modelId}`)
 }

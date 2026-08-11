@@ -42,6 +42,7 @@ const availableTransports = {
   anthropic: true,
   xai: true,
   openrouter: true,
+  ollama: true,
 }
 
 vi.mock('./ui/button', () => ({
@@ -72,6 +73,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
           openrouter: false,
+          ollama: false,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -100,6 +102,7 @@ describe('AI provider controls', () => {
           anthropic: true,
           xai: true,
           openrouter: true,
+          ollama: true,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -135,6 +138,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
           openrouter: false,
+          ollama: false,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -168,6 +172,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
           openrouter: false,
+          ollama: false,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -202,6 +207,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
           openrouter: false,
+          ollama: false,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -238,6 +244,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
           openrouter: true,
+          ollama: true,
         }}
         transportAvailability={availableTransports}
         onModelSelect={() => undefined}
@@ -265,6 +272,7 @@ describe('AI provider controls', () => {
           anthropic: false,
           xai: false,
           openrouter: false,
+          ollama: false,
         }}
         transportAvailability={{ ...availableTransports, moonshot: false }}
         onModelSelect={() => undefined}

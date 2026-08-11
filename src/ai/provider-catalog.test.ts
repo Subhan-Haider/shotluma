@@ -19,6 +19,7 @@ import {
 describe('AI provider catalog', () => {
   it('contains the ChatGPT connection and API-key providers', () => {
     expect(AI_PROVIDERS.map((provider) => provider.id)).toEqual([
+      'ollama',
       'codex',
       'moonshot',
       'google',
@@ -29,6 +30,7 @@ describe('AI provider catalog', () => {
       'openrouter',
     ])
     expect(AI_PROVIDERS.map((provider) => provider.envVar)).toEqual([
+      'VITE_OLLAMA_BASE_URL',
       '',
       'VITE_MOONSHOT_API_KEY',
       'VITE_GOOGLE_GENERATIVE_AI_API_KEY',

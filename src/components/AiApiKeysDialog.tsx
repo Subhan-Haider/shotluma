@@ -108,19 +108,20 @@ export const AiApiKeysDialog = ({
           </details>
 
           <div className="ai-keys-dialog-fields">
-            {AI_PROVIDERS.filter((provider) => provider.auth === 'apiKey').map((provider) => {
+            {AI_PROVIDERS.filter((provider) => provider.auth === 'apiKey' || provider.id === 'ollama').map((provider) => {
               const inputId = `${formId}-${provider.id}`
               const hasEnvFallback = envAvailability[provider.id] && !draft[provider.id]
+              const isOllama = provider.id === 'ollama'
               return (
                 <label className="ai-keys-dialog-field" htmlFor={inputId} key={provider.id}>
-                  <span>{provider.label}</span>
+                  <span>{isOllama ? 'Ollama Base URL' : provider.label}</span>
                   <Input
                     id={inputId}
-                    type="password"
+                    type={isOllama ? 'text' : 'password'}
                     autoComplete="off"
                     autoCapitalize="none"
                     spellCheck={false}
-                    placeholder={hasEnvFallback ? 'Using .env.local' : 'Paste API key'}
+                    placeholder={hasEnvFallback ? 'Using .env.local' : isOllama ? 'http://127.0.0.1:11434/api' : 'Paste API key'}
                     value={draft[provider.id]}
                     onKeyDown={(event) => {
                       if (event.key !== 'Enter' || event.nativeEvent.isComposing) return

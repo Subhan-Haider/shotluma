@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { loadOllamaModels } from '../ai/ollama-models'
 import {
   AI_PROVIDERS,
   AI_REASONING_EFFORT_LABELS,
@@ -6,11 +7,14 @@ import {
   findAiModelById,
   getAiModel,
   getAiProvider,
+  getDynamicOllamaModels,
   type AiModelSelection,
   type AiProviderId,
   type AiReasoningEffort,
 } from '../ai/provider-catalog'
+import { readStoredAiProviderKeys } from '../ai/provider-config'
 import {
+  AiGenerative,
   AiNetwork,
   AlertCircle,
   ChatGpt,
@@ -53,9 +57,10 @@ const AI_PROVIDER_ICONS: Record<AiProviderId, ComponentType<{ className?: string
   google: GoogleGemini,
   qwen: Qwen,
   openai: ChatGpt,
-  anthropic: Claude,
   xai: Grok,
   openrouter: AiNetwork,
+  anthropic: Claude,
+  ollama: AiGenerative,
 }
 
 export type AiProviderControlsProps = {
@@ -92,6 +97,16 @@ export const AiProviderControls = ({
   const isTransportAvailable = transportAvailability[selection.provider]
   const reasoningEffort = clampAiReasoningEffort(model, selection.reasoningEffort)
   const SelectedIcon = AI_PROVIDER_ICONS[selection.provider]
+
+  // Track if we've attempted to fetch dynamic models to force a re-render
+  const [, setDynamicOllamaFetchTime] = useState(0)
+
+  useEffect(() => {
+    if (!transportAvailability.ollama) return
+    const keys = readStoredAiProviderKeys()
+    const baseURL = keys.ollama || 'http://127.0.0.1:11434/api'
+    void loadOllamaModels(baseURL).then(() => setDynamicOllamaFetchTime(Date.now()))
+  }, [transportAvailability.ollama])
 
   return (
     <Popover>
@@ -165,11 +180,27 @@ export const AiProviderControls = ({
                               : `${option.label} · local proxy unavailable`}
                       </span>
                     </SelectLabel>
-                    {option.models.map((modelOption) => (
-                      <SelectItem key={modelOption.id} value={modelOption.id}>
-                        {modelOption.label}
-                      </SelectItem>
-                    ))}
+                    {(() => {
+                      if (option.id === 'ollama') {
+                        const dynamicModels = getDynamicOllamaModels()
+                        const combinedModels = [...option.models]
+                        for (const dModel of dynamicModels) {
+                          if (!combinedModels.some((m) => m.id === dModel.id)) {
+                            combinedModels.push(dModel)
+                          }
+                        }
+                        return combinedModels.map((modelOption) => (
+                          <SelectItem key={modelOption.id} value={modelOption.id}>
+                            {modelOption.label}
+                          </SelectItem>
+                        ))
+                      }
+                      return option.models.map((modelOption) => (
+                        <SelectItem key={modelOption.id} value={modelOption.id}>
+                          {modelOption.label}
+                        </SelectItem>
+                      ))
+                    })()}
                     {option.id === 'openrouter' && (
                       <SelectItem value={OPENROUTER_BROWSE_VALUE}>
                         Other models…
@@ -225,7 +256,7 @@ export const AiProviderControls = ({
               else onManageKeys(selection.provider)
             }}
           >
-            {selection.provider === 'codex' ? 'Codex connection' : 'API keys'}
+            {selection.provider === 'codex' ? 'Codex connection' : selection.provider === 'ollama' ? 'Base URL' : 'API keys'}
           </button>
         </div>
 

@@ -5,7 +5,6 @@ import { loadInitialState } from './app/project-utils'
 import { ProjectDeleteDialog } from './app/ProjectDeleteDialog'
 import { useProjectWorkspace } from './app/use-project-workspace'
 import { useSlideExport } from './app/use-slide-export'
-import { APP_LOGO_URL } from './brand'
 import { AiGenerateModal } from './components/AiGenerateModal'
 import { EditorCanvas } from './components/EditorCanvas'
 import { ElementToolbar } from './components/ElementToolbar'
@@ -330,16 +329,6 @@ export default function App() {
           onActivity={ai.handleActivity}
         />
       )}
-      <div className="mobile-blocker">
-        <span className="brand-symbol" aria-hidden="true">
-          <img src={APP_LOGO_URL} alt="" width="30" height="30" />
-        </span>
-        <h1>More room for great ideas.</h1>
-        <p>
-          Shotluma is a desktop studio. Open the editor on a larger screen to
-          design your screens with precision.
-        </p>
-      </div>
     </div>
   )
 }

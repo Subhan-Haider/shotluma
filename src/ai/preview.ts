@@ -1,4 +1,4 @@
-import { getFontEmbedCSS, toJpeg } from 'html-to-image'
+import { getFontEmbedCSS, toCanvas, toJpeg } from 'html-to-image'
 import { settleFrames } from './measure'
 
 // getFontEmbedCSS is expensive (it fetches and inlines every @font-face rule used on the page),
@@ -20,15 +20,19 @@ export async function captureSlidePreview(slideId: string): Promise<{ base64: st
 
   try {
     const fontEmbedCSS = await getCachedFontEmbedCSS(node)
-    const dataUrl = await toJpeg(node, {
+    const options = {
       canvasWidth: 430,
       canvasHeight: 932,
       pixelRatio: 1,
       quality: 0.8,
+      backgroundColor: '#ffffff',
       ...(fontEmbedCSS ? { fontEmbedCSS } : {}),
-      filter: (candidate) =>
+      filter: (candidate: Element) =>
         !(candidate instanceof HTMLElement && candidate.dataset['aiOverlay']),
-    })
+    }
+    // Warm-up render: primes image decode so the real capture is not blank
+    await toCanvas(node, options)
+    const dataUrl = await toJpeg(node, options)
     return { base64: dataUrl.replace(/^data:image\/jpeg;base64,/, ''), mediaType: 'image/jpeg' }
   } catch (error) {
     console.warn(`Failed to capture preview for slide ${slideId}`, error)
